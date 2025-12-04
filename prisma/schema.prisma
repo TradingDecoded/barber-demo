@@ -19,6 +19,19 @@ model Demo {
   createdAt   DateTime  @default(now())
   services    Service[]
   bookings    Booking[]
+  hours       BusinessHours[]
+}
+
+model BusinessHours {
+  id        String  @id @default(uuid())
+  demoId    String
+  demo      Demo    @relation(fields: [demoId], references: [id], onDelete: Cascade)
+  day       Int     // 0 = Sunday, 1 = Monday, etc.
+  isOpen    Boolean @default(true)
+  openTime  String  @default("09:00")
+  closeTime String  @default("18:00")
+
+  @@unique([demoId, day])
 }
 
 model Service {
@@ -45,5 +58,7 @@ model Booking {
   status          String   @default("confirmed")
   reminderSent    Boolean  @default(false)
   reviewSent      Boolean  @default(false)
+  recurringGroupId String?
+  recurringType   String?
   createdAt       DateTime @default(now())
 }

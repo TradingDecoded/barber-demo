@@ -9,24 +9,26 @@ interface Service {
   price: number;
 }
 
+interface BusinessHours {
+  day: number;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
 interface Demo {
   id: string;
   slug: string;
   shopName: string;
   ownerName: string;
   phone: string;
+  hours: BusinessHours[];
 }
 
 interface BookingFormProps {
   demo: Demo;
   services: Service[];
 }
-
-const timeSlots = [
-  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
-  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-];
 
 export default function BookingForm({ demo, services }: BookingFormProps) {
   const [step, setStep] = useState(1);
@@ -43,14 +45,60 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     email: "",
   });
 
-  // Generate next 14 days
+  const [recurring, setRecurring] = useState("none");
+  const [recurringCount, setRecurringCount] = useState(4);
+
+  const defaultHours: BusinessHours[] = [
+    { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
+    { day: 1, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 2, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 3, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 4, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 5, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 6, isOpen: true, openTime: "09:00", closeTime: "17:00" },
+  ];
+
+  const hours = demo.hours.length > 0 ? demo.hours : defaultHours;
+
+  const getHoursForDay = (dayOfWeek: number): BusinessHours | undefined => {
+    return hours.find((h) => h.day === dayOfWeek);
+  };
+
+  const generateTimeSlots = (dayOfWeek: number): string[] => {
+    const dayHours = getHoursForDay(dayOfWeek);
+    if (!dayHours || !dayHours.isOpen) return [];
+
+    const slots: string[] = [];
+    const [openHour, openMin] = dayHours.openTime.split(":").map(Number);
+    const [closeHour, closeMin] = dayHours.closeTime.split(":").map(Number);
+
+    let currentHour = openHour;
+    let currentMin = openMin;
+
+    while (currentHour < closeHour || (currentHour === closeHour && currentMin < closeMin)) {
+      const period = currentHour >= 12 ? "PM" : "AM";
+      const displayHour = currentHour > 12 ? currentHour - 12 : currentHour === 0 ? 12 : currentHour;
+      const displayMin = currentMin.toString().padStart(2, "0");
+      slots.push(`${displayHour}:${displayMin} ${period}`);
+
+      currentMin += 30;
+      if (currentMin >= 60) {
+        currentMin = 0;
+        currentHour++;
+      }
+    }
+
+    return slots;
+  };
+
   const getAvailableDates = () => {
     const dates = [];
     const today = new Date();
     for (let i = 1; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      if (date.getDay() !== 0) { // Skip Sundays
+      const dayHours = getHoursForDay(date.getDay());
+      if (dayHours && dayHours.isOpen) {
         dates.push(date);
       }
     }
@@ -76,8 +124,8 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
 
     try {
       const [time, period] = selectedTime.split(" ");
-      const [hours, minutes] = time.split(":");
-      let hour = parseInt(hours);
+      const [hrs, minutes] = time.split(":");
+      let hour = parseInt(hrs);
       if (period === "PM" && hour !== 12) hour += 12;
       if (period === "AM" && hour === 12) hour = 0;
 
@@ -94,6 +142,8 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
           customerPhone: customerInfo.phone,
           customerEmail: customerInfo.email,
           appointmentTime: appointmentDate.toISOString(),
+          recurring: recurring,
+          recurringCount: recurring !== "none" ? recurringCount : 1,
         }),
       });
 
@@ -111,15 +161,20 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     }
   };
 
+  const selectedDayOfWeek = selectedDate ? new Date(selectedDate).getDay() : -1;
+  const timeSlots = selectedDayOfWeek >= 0 ? generateTimeSlots(selectedDayOfWeek) : [];
+
   if (success) {
     return (
       <div className="glass-card rounded-2xl p-10 text-center">
         <div className="text-6xl mb-6">✅</div>
-        <h2 className="text-2xl font-bold text-white mb-4">Booking Confirmed!</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          {recurring !== "none" ? `${recurringCount} Appointments Booked!` : "Booking Confirmed!"}
+        </h2>
         <p className="text-gray-400 mb-2">
-          Your {selectedService?.name} at {demo.shopName} is booked for:
+          Your {selectedService?.name} at {demo.shopName} {recurring !== "none" ? "starts" : "is booked for"}:
         </p>
-        <p className="text-xl text-purple-400 font-semibold mb-6">
+        <p className="text-xl text-purple-400 font-semibold mb-4">
           {new Date(selectedDate).toLocaleDateString("en-US", {
             weekday: "long",
             month: "long",
@@ -127,8 +182,13 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
           })}{" "}
           at {selectedTime}
         </p>
+        {recurring !== "none" && (
+          <p className="text-gray-400 mb-4">
+            Repeating {recurring} for {recurringCount} appointments
+          </p>
+        )}
         <p className="text-gray-500 text-sm">
-          A confirmation SMS has been sent to {customerInfo.phone}
+          Confirmation SMS has been sent to {customerInfo.phone}
         </p>
       </div>
     );
@@ -141,19 +201,17 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                step >= s
-                  ? "bg-purple-500 text-white"
-                  : "bg-white/10 text-gray-500"
-              }`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step >= s
+                ? "bg-purple-500 text-white"
+                : "bg-white/10 text-gray-500"
+                }`}
             >
               {s}
             </div>
             {s < 3 && (
               <div
-                className={`w-16 h-1 mx-2 ${
-                  step > s ? "bg-purple-500" : "bg-white/10"
-                }`}
+                className={`w-16 h-1 mx-2 ${step > s ? "bg-purple-500" : "bg-white/10"
+                  }`}
               />
             )}
           </div>
@@ -174,11 +232,10 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                   setSelectedService(service);
                   setStep(2);
                 }}
-                className={`p-5 rounded-xl border text-left transition-all ${
-                  selectedService?.id === service.id
-                    ? "border-purple-500 bg-purple-500/20"
-                    : "border-white/10 hover:border-white/30"
-                }`}
+                className={`p-5 rounded-xl border text-left transition-all ${selectedService?.id === service.id
+                  ? "border-purple-500 bg-purple-500/20"
+                  : "border-white/10 hover:border-white/30"
+                  }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -214,12 +271,14 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
               {getAvailableDates().map((date) => (
                 <button
                   key={date.toISOString()}
-                  onClick={() => setSelectedDate(date.toISOString())}
-                  className={`p-3 rounded-lg text-center transition-all ${
-                    selectedDate === date.toISOString()
-                      ? "bg-purple-500 text-white"
-                      : "bg-white/10 text-gray-300 hover:bg-white/20"
-                  }`}
+                  onClick={() => {
+                    setSelectedDate(date.toISOString());
+                    setSelectedTime("");
+                  }}
+                  className={`p-3 rounded-lg text-center transition-all ${selectedDate === date.toISOString()
+                    ? "bg-purple-500 text-white"
+                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                    }`}
                 >
                   <div className="text-xs">{formatDate(date).split(",")[0]}</div>
                   <div className="font-semibold">{date.getDate()}</div>
@@ -233,21 +292,73 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Select Time
               </label>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                {timeSlots.map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`p-3 rounded-lg text-center transition-all ${
-                      selectedTime === time
+              {timeSlots.length > 0 ? (
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {timeSlots.map((time) => (
+                    <button
+                      key={time}
+                      onClick={() => setSelectedTime(time)}
+                      className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
                         ? "bg-purple-500 text-white"
                         : "bg-white/10 text-gray-300 hover:bg-white/20"
-                    }`}
+                        }`}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-center py-4">No available times for this date</p>
+              )}
+            </div>
+          )}
+
+          {selectedDate && selectedTime && (
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Repeat Appointment?
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { value: "none", label: "One-time" },
+                  { value: "weekly", label: "Weekly" },
+                  { value: "biweekly", label: "Bi-weekly" },
+                  { value: "monthly", label: "Monthly" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setRecurring(option.value)}
+                    className={`p-3 rounded-lg text-center transition-all ${recurring === option.value
+                      ? "bg-purple-500 text-white"
+                      : "bg-white/10 text-gray-300 hover:bg-white/20"
+                      }`}
                   >
-                    {time}
+                    {option.label}
                   </button>
                 ))}
               </div>
+
+              {recurring !== "none" && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Number of appointments
+                  </label>
+                  <div className="flex gap-3">
+                    {[4, 8, 12].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => setRecurringCount(num)}
+                        className={`px-6 py-2 rounded-lg transition-all ${recurringCount === num
+                          ? "bg-purple-500 text-white"
+                          : "bg-white/10 text-gray-300 hover:bg-white/20"
+                          }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -349,10 +460,16 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                 <span>Time:</span>
                 <span className="font-semibold">{selectedTime}</span>
               </div>
+              {recurring !== "none" && (
+                <div className="flex justify-between">
+                  <span>Repeat:</span>
+                  <span className="font-semibold capitalize">{recurring} × {recurringCount}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-white/10 pt-2 mt-2">
                 <span>Price:</span>
                 <span className="font-bold text-purple-400">
-                  ${selectedService?.price}
+                  ${selectedService?.price}{recurring !== "none" ? ` × ${recurringCount} = $${(selectedService?.price || 0) * recurringCount}` : ""}
                 </span>
               </div>
             </div>

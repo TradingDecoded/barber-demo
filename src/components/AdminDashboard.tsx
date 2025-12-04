@@ -23,6 +23,14 @@ interface Booking {
   service: Service;
 }
 
+interface BusinessHours {
+  id: string;
+  day: number;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
 interface Demo {
   id: string;
   slug: string;
@@ -30,9 +38,11 @@ interface Demo {
   ownerName: string;
   email: string;
   phone: string;
+  logoUrl: string | null;
   createdAt: string;
   services: Service[];
   bookings: Booking[];
+  hours: BusinessHours[];
 }
 
 interface Props {
@@ -47,6 +57,23 @@ export default function AdminDashboard({ demo }: Props) {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(demo.logoUrl || "");
+  const [uploading, setUploading] = useState(false);
+  const [savingHours, setSavingHours] = useState(false);
+  const defaultHours = [
+    { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
+    { day: 1, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 2, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 3, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 4, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 5, isOpen: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 6, isOpen: true, openTime: "09:00", closeTime: "17:00" },
+  ];
+  const [hours, setHours] = useState(
+    demo.hours.length > 0
+      ? demo.hours.sort((a, b) => a.day - b.day)
+      : defaultHours
+  );
 
   const [newService, setNewService] = useState({ name: "", durationMinutes: "30", price: "" });
 
@@ -134,14 +161,64 @@ export default function AdminDashboard({ demo }: Props) {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("demoId", demo.id);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setLogoUrl(data.logoUrl + "?t=" + Date.now());
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    }
+    setUploading(false);
+  };
+
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const updateHours = (day: number, field: string, value: string | boolean) => {
+    setHours(hours.map((h) => (h.day === day ? { ...h, [field]: value } : h)));
+  };
+
+  const handleSaveHours = async () => {
+    setSavingHours(true);
+    try {
+      const res = await fetch("/api/hours", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demoId: demo.id, hours }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+    setSavingHours(false);
+  };
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
-              {demo.shopName.charAt(0)}
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={demo.shopName} className="h-10 max-w-[120px] object-contain" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                {demo.shopName.charAt(0)}
+              </div>
+            )}
             <div>
               <span className="text-xl font-semibold text-white">{demo.shopName}</span>
               <span className="text-gray-500 text-sm block">Admin Dashboard</span>
@@ -445,11 +522,82 @@ export default function AdminDashboard({ demo }: Props) {
             <div className="glass-card rounded-xl p-6 space-y-4">
               <h3 className="text-white font-medium">Shop Information</h3>
               <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2 flex items-center gap-6">
+                  <div className="relative">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Shop logo" className="h-20 max-w-[160px] object-contain" />
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                        {demo.shopName.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-sm mb-2">Shop Logo</p>
+                    <label className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 cursor-pointer">
+                      {uploading ? "Uploading..." : "Upload Logo"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <div><p className="text-gray-400 text-sm">Shop Name</p><p className="text-white">{demo.shopName}</p></div>
                 <div><p className="text-gray-400 text-sm">Owner</p><p className="text-white">{demo.ownerName}</p></div>
                 <div><p className="text-gray-400 text-sm">Email</p><p className="text-white">{demo.email}</p></div>
                 <div><p className="text-gray-400 text-sm">Phone</p><p className="text-white">{demo.phone}</p></div>
               </div>
+            </div>
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h3 className="text-white font-medium">Business Hours</h3>
+
+              <div className="space-y-3">
+                {hours.map((h) => (
+                  <div key={h.day} className="flex items-center gap-4 py-2 border-b border-white/5 last:border-0">
+                    <div className="w-24">
+                      <span className="text-white">{dayNames[h.day]}</span>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={h.isOpen}
+                        onChange={(e) => updateHours(h.day, "isOpen", e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span className="text-gray-400 text-sm">{h.isOpen ? "Open" : "Closed"}</span>
+                    </label>
+                    {h.isOpen && (
+                      <>
+                        <input
+                          type="time"
+                          value={h.openTime}
+                          onChange={(e) => updateHours(h.day, "openTime", e.target.value)}
+                          className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-white text-sm"
+                        />
+                        <span className="text-gray-400">to</span>
+                        <input
+                          type="time"
+                          value={h.closeTime}
+                          onChange={(e) => updateHours(h.day, "closeTime", e.target.value)}
+                          className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-white text-sm"
+                        />
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={handleSaveHours}
+                disabled={savingHours}
+                className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 disabled:opacity-50"
+              >
+                {savingHours ? "Saving..." : "Save Hours"}
+              </button>
             </div>
             <div className="glass-card rounded-xl p-6 space-y-4">
               <h3 className="text-white font-medium">Demo Code</h3>

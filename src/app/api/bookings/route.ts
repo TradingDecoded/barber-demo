@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSMS } from "@/lib/twilio";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
       customerPhone,
       customerEmail,
       appointmentTime,
+      recurring = "none",
+      recurringCount = 1,
     } = body;
 
     if (!demoId || !serviceId || !customerName || !customerPhone || !appointmentTime) {
@@ -43,18 +46,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        demoId,
-        serviceId,
-        customerName,
-        customerPhone,
-        customerEmail: customerEmail || null,
-        appointmentTime: new Date(appointmentTime),
-      },
-    });
+    const bookings = [];
+    const recurringGroupId = recurring !== "none" ? uuidv4() : null;
+    const baseDate = new Date(appointmentTime);
 
-    const appointmentDate = new Date(appointmentTime);
+    for (let i = 0; i < recurringCount; i++) {
+      const apptDate = new Date(baseDate);
+      
+      if (recurring === "weekly") {
+        apptDate.setDate(baseDate.getDate() + (i * 7));
+      } else if (recurring === "biweekly") {
+        apptDate.setDate(baseDate.getDate() + (i * 14));
+      } else if (recurring === "monthly") {
+        apptDate.setMonth(baseDate.getMonth() + i);
+      }
+
+      const booking = await prisma.booking.create({
+        data: {
+          demoId,
+          serviceId,
+          customerName,
+          customerPhone,
+          customerEmail: customerEmail || null,
+          appointmentTime: apptDate,
+          recurringGroupId,
+          recurringType: recurring !== "none" ? recurring : null,
+        },
+      });
+
+      bookings.push(booking);
+    }
+
+    const firstAppt = bookings[0];
+    const appointmentDate = new Date(firstAppt.appointmentTime);
     const formattedDate = appointmentDate.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -66,19 +90,24 @@ export async function POST(request: NextRequest) {
       hour12: true,
     });
 
-    // Send confirmation SMS to customer
-    await sendSMS(
-      customerPhone,
-      `✅ Booking confirmed!\n\n${service.name} at ${demo.shopName}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n\nSee you then!`
-    );
+    let customerMessage = `✅ Booking confirmed!\n\n${service.name} at ${demo.shopName}\n📅 ${formattedDate}\n⏰ ${formattedTime}`;
+    let ownerMessage = `📅 New booking!\n\n${customerName} booked a ${service.name}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n📱 ${customerPhone}`;
 
-    // Send alert SMS to barber/owner
-    await sendSMS(
-      demo.phone,
-      `📅 New booking!\n\n${customerName} booked a ${service.name}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n📱 ${customerPhone}`
-    );
+    if (recurring !== "none") {
+      customerMessage += `\n\n🔄 Repeating ${recurring} for ${recurringCount} appointments`;
+      ownerMessage += `\n\n🔄 Recurring: ${recurring} × ${recurringCount}`;
+    }
 
-    return NextResponse.json({ success: true, bookingId: booking.id });
+    customerMessage += "\n\nSee you then!";
+
+    await sendSMS(customerPhone, customerMessage);
+    await sendSMS(demo.phone, ownerMessage);
+
+    return NextResponse.json({ 
+      success: true, 
+      bookingId: firstAppt.id,
+      totalBookings: bookings.length,
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
     return NextResponse.json(

@@ -13,6 +13,7 @@ export default async function AdminPage({ params }: PageProps) {
     where: { slug },
     include: {
       services: true,
+      hours: true,
       bookings: {
         include: {
           service: true,
@@ -34,6 +35,13 @@ export default async function AdminPage({ params }: PageProps) {
     services: demo.services.map((s) => ({
       ...s,
       createdAt: s.createdAt.toISOString(),
+    })),
+    hours: demo.hours.map((h) => ({
+      id: h.id,
+      day: h.day,
+      isOpen: h.isOpen,
+      openTime: h.openTime,
+      closeTime: h.closeTime,
     })),
     bookings: demo.bookings.map((b) => ({
       ...b,

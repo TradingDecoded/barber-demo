@@ -11,7 +11,7 @@ export default async function DemoPage({ params }: PageProps) {
 
   const demo = await prisma.demo.findUnique({
     where: { slug },
-    include: { services: true },
+    include: { services: true, hours: true },
   });
 
   if (!demo) {
@@ -24,9 +24,13 @@ export default async function DemoPage({ params }: PageProps) {
       <header className="border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
-              {demo.shopName.charAt(0)}
-            </div>
+            {demo.logoUrl ? (
+              <img src={demo.logoUrl} alt={demo.shopName} className="h-10 max-w-[120px] object-contain" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                {demo.shopName.charAt(0)}
+              </div>
+            )}
             <span className="text-xl font-semibold text-white">{demo.shopName}</span>
           </div>
           <div className="text-sm text-purple-400 glass-card px-3 py-1 rounded-full">
