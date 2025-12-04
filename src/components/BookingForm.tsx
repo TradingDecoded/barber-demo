@@ -47,6 +47,8 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
 
   const [recurring, setRecurring] = useState("none");
   const [recurringCount, setRecurringCount] = useState(4);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const defaultHours: BusinessHours[] = [
     { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
@@ -62,6 +64,21 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
 
   const getHoursForDay = (dayOfWeek: number): BusinessHours | undefined => {
     return hours.find((h) => h.day === dayOfWeek);
+  };
+
+  const fetchBookedSlots = async (date: Date) => {
+    setLoadingSlots(true);
+    try {
+      const offset = date.getTimezoneOffset();
+      const res = await fetch(`/api/bookings/check?demoId=${demo.id}&date=${date.toISOString()}&offset=${offset}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookedSlots(data.bookedTimes || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch booked slots:", err);
+    }
+    setLoadingSlots(false);
   };
 
   const generateTimeSlots = (dayOfWeek: number): string[] => {
@@ -274,6 +291,7 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                   onClick={() => {
                     setSelectedDate(date.toISOString());
                     setSelectedTime("");
+                    fetchBookedSlots(date);
                   }}
                   className={`p-3 rounded-lg text-center transition-all ${selectedDate === date.toISOString()
                     ? "bg-purple-500 text-white"
@@ -292,20 +310,28 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Select Time
               </label>
-              {timeSlots.length > 0 ? (
+              {loadingSlots ? (
+                <p className="text-gray-400 text-center py-4">Loading available times...</p>
+              ) : timeSlots.length > 0 ? (
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
-                        ? "bg-purple-500 text-white"
-                        : "bg-white/10 text-gray-300 hover:bg-white/20"
-                        }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
+                  {timeSlots.map((time) => {
+                    const isBooked = bookedSlots.includes(time);
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => !isBooked && setSelectedTime(time)}
+                        disabled={isBooked}
+                        className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
+                          ? "bg-purple-500 text-white"
+                          : isBooked
+                            ? "bg-white/5 text-gray-600 cursor-not-allowed line-through"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                          }`}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-400 text-center py-4">No available times for this date</p>
