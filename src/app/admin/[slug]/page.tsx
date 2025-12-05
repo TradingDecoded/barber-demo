@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import AdminDashboard from "@/components/AdminDashboard";
+import OnboardingWrapper from "@/components/OnboardingWrapper";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -59,6 +60,10 @@ export default async function AdminPage({ params }: PageProps) {
       },
     })),
   };
+
+  if (!demo.onboarded) {
+    return <OnboardingWrapper demo={serializedDemo} />;
+  }
 
   return <AdminDashboard demo={serializedDemo} />;
 }

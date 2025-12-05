@@ -18,6 +18,7 @@ model Demo {
   accentColor String    @default("#8b5cf6")
   colorPalette String?
   bookingWindowDays Int @default(60)
+  onboarded   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   services    Service[]
   bookings    Booking[]

@@ -62,9 +62,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Demo ID required" }, { status: 400 });
     }
 
-    const updateData: { bookingWindowDays?: number; colorPalette?: string } = {};
+    const updateData: { bookingWindowDays?: number; colorPalette?: string; onboarded?: boolean } = {};
     if (bookingWindowDays !== undefined) updateData.bookingWindowDays = bookingWindowDays;
     if (colorPalette !== undefined) updateData.colorPalette = colorPalette;
+    if (body.onboarded !== undefined) updateData.onboarded = body.onboarded;
 
     const demo = await prisma.demo.update({
       where: { id: demoId },

@@ -28,10 +28,18 @@ export async function GET(request: NextRequest) {
     bookings.map((b) => ({
       id: b.id,
       customerName: b.customerName,
+      customerPhone: b.customerPhone,
+      customerEmail: b.customerEmail,
       appointmentTime: b.appointmentTime.toISOString(),
+      status: b.status,
+      reminderSent: b.reminderSent,
+      reviewSent: b.reviewSent,
+      createdAt: b.createdAt.toISOString(),
       service: {
+        id: b.service.id,
         name: b.service.name,
         durationMinutes: b.service.durationMinutes,
+        price: b.service.price,
       },
     }))
   );
@@ -86,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < recurringCount; i++) {
       const apptDate = new Date(baseDate);
-      
+
       if (recurring === "weekly") {
         apptDate.setDate(baseDate.getDate() + (i * 7));
       } else if (recurring === "biweekly") {
@@ -137,8 +145,8 @@ export async function POST(request: NextRequest) {
     await sendSMS(customerPhone, customerMessage);
     await sendSMS(demo.phone, ownerMessage);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       bookingId: firstAppt.id,
       totalBookings: bookings.length,
     });

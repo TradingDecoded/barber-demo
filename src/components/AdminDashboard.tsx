@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface Service {
@@ -100,6 +100,24 @@ export default function AdminDashboard({ demo }: Props) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
   const bookingUrl = baseUrl + "/demo/" + demo.slug;
   const now = new Date();
+
+  // Poll for new bookings every 15 seconds
+  const fetchBookings = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/bookings?demoId=${demo.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error);
+    }
+  }, [demo.id]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchBookings, 15000);
+    return () => clearInterval(interval);
+  }, [fetchBookings]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(bookingUrl);
