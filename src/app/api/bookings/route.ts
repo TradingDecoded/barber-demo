@@ -3,6 +3,40 @@ import { prisma } from "@/lib/prisma";
 import { sendSMS } from "@/lib/twilio";
 import { v4 as uuidv4 } from "uuid";
 
+export async function GET(request: NextRequest) {
+  const demoId = request.nextUrl.searchParams.get("demoId");
+  const status = request.nextUrl.searchParams.get("status");
+
+  if (!demoId) {
+    return NextResponse.json({ error: "Missing demoId" }, { status: 400 });
+  }
+
+  const bookings = await prisma.booking.findMany({
+    where: {
+      demoId,
+      ...(status ? { status } : {}),
+    },
+    include: {
+      service: true,
+    },
+    orderBy: {
+      appointmentTime: "asc",
+    },
+  });
+
+  return NextResponse.json(
+    bookings.map((b) => ({
+      id: b.id,
+      customerName: b.customerName,
+      appointmentTime: b.appointmentTime.toISOString(),
+      service: {
+        name: b.service.name,
+        durationMinutes: b.service.durationMinutes,
+      },
+    }))
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

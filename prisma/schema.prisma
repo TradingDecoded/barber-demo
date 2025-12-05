@@ -20,7 +20,8 @@ model Demo {
   createdAt   DateTime  @default(now())
   services    Service[]
   bookings    Booking[]
-  hours       BusinessHours[]
+  hours         BusinessHours[]
+  blockedDates  BlockedDate[]
 }
 
 model BusinessHours {
@@ -62,4 +63,15 @@ model Booking {
   recurringGroupId String?
   recurringType   String?
   createdAt       DateTime @default(now())
+}
+
+model BlockedDate {
+  id        String   @id @default(uuid())
+  demoId    String
+  demo      Demo     @relation(fields: [demoId], references: [id], onDelete: Cascade)
+  date      DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([demoId, date])
 }

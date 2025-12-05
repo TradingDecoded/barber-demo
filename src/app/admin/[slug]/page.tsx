@@ -14,6 +14,7 @@ export default async function AdminPage({ params }: PageProps) {
     include: {
       services: true,
       hours: true,
+      blockedDates: true,
       bookings: {
         include: {
           service: true,
@@ -42,6 +43,11 @@ export default async function AdminPage({ params }: PageProps) {
       isOpen: h.isOpen,
       openTime: h.openTime,
       closeTime: h.closeTime,
+    })),
+    blockedDates: demo.blockedDates.map((b) => ({
+      id: b.id,
+      date: b.date.toISOString(),
+      reason: b.reason,
     })),
     bookings: demo.bookings.map((b) => ({
       ...b,

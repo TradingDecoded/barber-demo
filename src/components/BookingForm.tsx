@@ -24,6 +24,7 @@ interface Demo {
   phone: string;
   hours: BusinessHours[];
   bookingWindowDays?: number;
+  blockedDates?: { date: string; reason: string | null }[];
 }
 
 interface BookingFormProps {
@@ -109,8 +110,15 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     return slots;
   };
 
+  const getBlockedDateInfo = (date: Date): { isBlocked: boolean; reason: string | null } => {
+    const blocked = (demo.blockedDates || []).find(
+      (b) => new Date(b.date).toDateString() === date.toDateString()
+    );
+    return { isBlocked: !!blocked, reason: blocked?.reason || null };
+  };
+
   const getAvailableDates = () => {
-    const dates: Date[] = [];
+    const dates: { date: Date; isBlocked: boolean; reason: string | null }[] = [];
     const today = new Date();
     const windowDays = demo.bookingWindowDays || 60;
 
@@ -119,7 +127,8 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
       date.setDate(today.getDate() + i);
       const dayHours = getHoursForDay(date.getDay());
       if (dayHours && dayHours.isOpen) {
-        dates.push(date);
+        const blockInfo = getBlockedDateInfo(date);
+        dates.push({ date, isBlocked: blockInfo.isBlocked, reason: blockInfo.reason });
       }
     }
     return dates;
@@ -127,14 +136,14 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
 
   const groupDatesByMonth = () => {
     const dates = getAvailableDates();
-    const grouped: { [key: string]: Date[] } = {};
+    const grouped: { [key: string]: { date: Date; isBlocked: boolean; reason: string | null }[] } = {};
 
-    dates.forEach((date) => {
-      const monthKey = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    dates.forEach((item) => {
+      const monthKey = item.date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
       if (!grouped[monthKey]) {
         grouped[monthKey] = [];
       }
-      grouped[monthKey].push(date);
+      grouped[monthKey].push(item);
     });
 
     return grouped;
@@ -336,23 +345,32 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                         <h3 className="text-white font-medium mb-3">{month}</h3>
                       )}
                       <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-                        {grouped[month].map((date) => (
+                        {grouped[month].map((item) => (
                           <button
-                            key={date.toISOString()}
+                            key={item.date.toISOString()}
                             onClick={() => {
-                              setSelectedDate(date.toISOString());
-                              setSelectedTime("");
-                              fetchBookedSlots(date);
+                              if (!item.isBlocked) {
+                                setSelectedDate(item.date.toISOString());
+                                setSelectedTime("");
+                                fetchBookedSlots(item.date);
+                              }
                             }}
-                            className={`p-3 rounded-lg text-center transition-all ${selectedDate === date.toISOString()
+                            disabled={item.isBlocked}
+                            className={`p-3 rounded-lg text-center transition-all ${selectedDate === item.date.toISOString()
                               ? "bg-purple-500 text-white"
-                              : "bg-white/10 text-gray-300 hover:bg-white/20"
+                              : item.isBlocked
+                                ? "bg-white/5 text-gray-600 cursor-not-allowed"
+                                : "bg-white/10 text-gray-300 hover:bg-white/20"
                               }`}
+                            title={item.isBlocked ? (item.reason || "Closed") : ""}
                           >
-                            <div className="text-xs text-gray-400">
-                              {date.toLocaleDateString("en-US", { weekday: "short" })}
+                            <div className={`text-xs ${item.isBlocked ? "text-gray-600" : "text-gray-400"}`}>
+                              {item.date.toLocaleDateString("en-US", { weekday: "short" })}
                             </div>
-                            <div className="font-semibold">{date.getDate()}</div>
+                            <div className={`font-semibold ${item.isBlocked ? "line-through" : ""}`}>{item.date.getDate()}</div>
+                            {item.isBlocked && (
+                              <div className="text-[10px] text-red-400 truncate">{item.reason || "Closed"}</div>
+                            )}
                           </button>
                         ))}
                       </div>

@@ -11,7 +11,7 @@ export default async function DemoPage({ params }: PageProps) {
 
   const demo = await prisma.demo.findUnique({
     where: { slug },
-    include: { services: true, hours: true },
+    include: { services: true, hours: true, blockedDates: true },
   });
 
   if (!demo) {
@@ -55,7 +55,7 @@ export default async function DemoPage({ params }: PageProps) {
       {/* Booking Section */}
       <section className="pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <BookingForm demo={demo} services={demo.services} />
+          <BookingForm demo={{...demo, blockedDates: demo.blockedDates.map(b => ({ date: b.date.toISOString(), reason: b.reason }))}} services={demo.services} />
         </div>
       </section>
 

@@ -31,6 +31,12 @@ interface BusinessHours {
   closeTime: string;
 }
 
+interface BlockedDate {
+  id: string;
+  date: string;
+  reason: string | null;
+}
+
 interface Demo {
   id: string;
   slug: string;
@@ -44,6 +50,7 @@ interface Demo {
   services: Service[];
   bookings: Booking[];
   hours: BusinessHours[];
+  blockedDates: BlockedDate[];
 }
 
 interface Props {
@@ -68,6 +75,11 @@ export default function AdminDashboard({ demo }: Props) {
   const [bookingFilter, setBookingFilter] = useState("upcoming");
   const [bookingWindowDays, setBookingWindowDays] = useState(demo.bookingWindowDays || 60);
   const [savingWindow, setSavingWindow] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>(demo.blockedDates || []);
+  const [newBlockedStartDate, setNewBlockedStartDate] = useState("");
+  const [newBlockedEndDate, setNewBlockedEndDate] = useState("");
+  const [newBlockedReason, setNewBlockedReason] = useState("");
+  const [savingBlocked, setSavingBlocked] = useState(false);
   const defaultHours = [
     { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
     { day: 1, isOpen: true, openTime: "09:00", closeTime: "18:00" },
@@ -230,6 +242,58 @@ export default function AdminDashboard({ demo }: Props) {
     setSavingWindow(false);
   };
 
+  const handleAddBlockedDate = async () => {
+    if (!newBlockedStartDate) return;
+    setSavingBlocked(true);
+    try {
+      const startDate = new Date(newBlockedStartDate);
+      const endDate = newBlockedEndDate ? new Date(newBlockedEndDate) : startDate;
+
+      const datesToBlock: Date[] = [];
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        datesToBlock.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+
+      const newBlocked: BlockedDate[] = [];
+      for (const date of datesToBlock) {
+        const res = await fetch("/api/blocked-dates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            demoId: demo.id,
+            date: date.toISOString(),
+            reason: newBlockedReason || null,
+          }),
+        });
+        if (res.ok) {
+          const blocked = await res.json();
+          newBlocked.push(blocked);
+        }
+      }
+
+      setBlockedDates([...blockedDates, ...newBlocked].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      setNewBlockedStartDate("");
+      setNewBlockedEndDate("");
+      setNewBlockedReason("");
+    } catch (e) {
+      console.error(e);
+    }
+    setSavingBlocked(false);
+  };
+
+  const handleDeleteBlockedDate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/blocked-dates?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setBlockedDates(blockedDates.filter((b) => b.id !== id));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm("Cancel this appointment? The customer will be notified.")) return;
     setActionLoading(bookingId);
@@ -315,6 +379,7 @@ export default function AdminDashboard({ demo }: Props) {
           <button onClick={() => setActiveTab("overview")} className={activeTab === "overview" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Overview</button>
           <button onClick={() => setActiveTab("bookings")} className={activeTab === "bookings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Bookings</button>
           <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Services</button>
+          <button onClick={() => setActiveTab("closures")} className={activeTab === "closures" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Closures</button>
           <button onClick={() => setActiveTab("settings")} className={activeTab === "settings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Settings</button>
         </div>
       </div>
@@ -663,6 +728,97 @@ export default function AdminDashboard({ demo }: Props) {
                       )}
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "closures" && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-white">Blocked Dates</h2>
+            <p className="text-gray-400">Block off dates for vacations, holidays, or other closures. Customers won&apos;t be able to book on these dates.</p>
+
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h3 className="text-white font-medium">Add Blocked Dates</h3>
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={newBlockedStartDate}
+                    onChange={(e) => {
+                      setNewBlockedStartDate(e.target.value);
+                      if (newBlockedEndDate && e.target.value > newBlockedEndDate) {
+                        setNewBlockedEndDate(e.target.value);
+                      }
+                    }}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={newBlockedEndDate}
+                    onChange={(e) => setNewBlockedEndDate(e.target.value)}
+                    min={newBlockedStartDate || new Date().toISOString().split("T")[0]}
+                    className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                  />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-gray-400 text-sm mb-1">Reason (optional)</label>
+                  <input
+                    type="text"
+                    value={newBlockedReason}
+                    onChange={(e) => setNewBlockedReason(e.target.value)}
+                    placeholder="e.g., Vacation, Holiday"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-500"
+                  />
+                </div>
+                <button
+                  onClick={handleAddBlockedDate}
+                  disabled={!newBlockedStartDate || savingBlocked}
+                  className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 disabled:opacity-50"
+                >
+                  {savingBlocked ? "Adding..." : "Block Dates"}
+                </button>
+              </div>
+              {newBlockedStartDate && newBlockedEndDate && newBlockedStartDate !== newBlockedEndDate && (
+                <p className="text-gray-400 text-sm">
+                  This will block {Math.ceil((new Date(newBlockedEndDate).getTime() - new Date(newBlockedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
+                </p>
+              )}
+            </div>
+
+            <div className="glass-card rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Date</th>
+                    <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Reason</th>
+                    <th className="text-right text-gray-400 text-sm font-medium px-5 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {blockedDates.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-5 py-8 text-center text-gray-400">No blocked dates</td>
+                    </tr>
+                  ) : (
+                    blockedDates.map((b) => (
+                      <tr key={b.id}>
+                        <td className="px-5 py-4 text-white">
+                          {new Date(b.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                        </td>
+                        <td className="px-5 py-4 text-gray-400">{b.reason || "—"}</td>
+                        <td className="px-5 py-4 text-right">
+                          <button onClick={() => handleDeleteBlockedDate(b.id)} className="text-red-400 hover:text-red-300 text-sm">Remove</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
