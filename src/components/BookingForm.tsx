@@ -356,7 +356,7 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                               }
                             }}
                             disabled={item.isBlocked}
-                            className={`p-3 rounded-lg text-center transition-all ${selectedDate === item.date.toISOString()
+                            className={`p-3 rounded-lg text-center transition-all ${selectedDate && new Date(selectedDate).toDateString() === item.date.toDateString()
                               ? "bg-purple-500 text-white"
                               : item.isBlocked
                                 ? "bg-white/5 text-gray-600 cursor-not-allowed"

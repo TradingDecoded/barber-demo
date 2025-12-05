@@ -16,6 +16,7 @@ model Demo {
   phone       String
   logoUrl     String?
   accentColor String    @default("#8b5cf6")
+  colorPalette String?
   bookingWindowDays Int @default(60)
   createdAt   DateTime  @default(now())
   services    Service[]

@@ -56,15 +56,19 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { demoId, bookingWindowDays } = body;
+    const { demoId, bookingWindowDays, colorPalette } = body;
 
     if (!demoId) {
       return NextResponse.json({ error: "Demo ID required" }, { status: 400 });
     }
 
+    const updateData: { bookingWindowDays?: number; colorPalette?: string } = {};
+    if (bookingWindowDays !== undefined) updateData.bookingWindowDays = bookingWindowDays;
+    if (colorPalette !== undefined) updateData.colorPalette = colorPalette;
+
     const demo = await prisma.demo.update({
       where: { id: demoId },
-      data: { bookingWindowDays },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, demo });
