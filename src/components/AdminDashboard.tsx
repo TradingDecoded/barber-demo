@@ -351,9 +351,14 @@ export default function AdminDashboard({ demo }: Props) {
               <span className="text-gray-500 text-sm block">Admin Dashboard</span>
             </div>
           </div>
-          <a href={"/demo/" + demo.slug} target="_blank" className="text-sm text-purple-400 hover:text-purple-300">
-            View Booking Page
-          </a>
+          <div className="flex items-center gap-4">
+            <a href={"/tv/" + demo.slug} target="_blank" className="text-sm text-purple-400 hover:text-purple-300">
+              TV Display
+            </a>
+            <a href={"/demo/" + demo.slug} target="_blank" className="text-sm text-purple-400 hover:text-purple-300">
+              View Booking Page
+            </a>
+          </div>
         </div>
       </header>
 
