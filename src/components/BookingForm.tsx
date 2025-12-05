@@ -23,6 +23,7 @@ interface Demo {
   ownerName: string;
   phone: string;
   hours: BusinessHours[];
+  bookingWindowDays?: number;
 }
 
 interface BookingFormProps {
@@ -109,9 +110,11 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
   };
 
   const getAvailableDates = () => {
-    const dates = [];
+    const dates: Date[] = [];
     const today = new Date();
-    for (let i = 1; i <= 14; i++) {
+    const windowDays = demo.bookingWindowDays || 60;
+
+    for (let i = 1; i <= windowDays; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       const dayHours = getHoursForDay(date.getDay());
@@ -121,6 +124,24 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     }
     return dates;
   };
+
+  const groupDatesByMonth = () => {
+    const dates = getAvailableDates();
+    const grouped: { [key: string]: Date[] } = {};
+
+    dates.forEach((date) => {
+      const monthKey = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(date);
+    });
+
+    return grouped;
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [showAllMonths, setShowAllMonths] = useState(false);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -281,30 +302,66 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
           </h2>
 
           <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-300 mb-3">
-              Select Date
-            </label>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {getAvailableDates().map((date) => (
-                <button
-                  key={date.toISOString()}
-                  onClick={() => {
-                    setSelectedDate(date.toISOString());
-                    setSelectedTime("");
-                    fetchBookedSlots(date);
-                  }}
-                  className={`p-3 rounded-lg text-center transition-all ${selectedDate === date.toISOString()
-                    ? "bg-purple-500 text-white"
-                    : "bg-white/10 text-gray-300 hover:bg-white/20"
-                    }`}
-                >
-                  <div className="text-xs">{formatDate(date).split(",")[0]}</div>
-                  <div className="font-semibold">{date.getDate()}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
+            {(() => {
+              const grouped = groupDatesByMonth();
+              const months = Object.keys(grouped);
+              const currentMonth = selectedMonth || months[0];
+              const displayMonths = showAllMonths ? months : [currentMonth];
+
+              return (
+                <div className="space-y-6">
+                  {/* Month selector */}
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={currentMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                    >
+                      {months.map((month) => (
+                        <option key={month} value={month}>{month}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setShowAllMonths(!showAllMonths)}
+                      className="text-sm text-purple-400 hover:text-purple-300"
+                    >
+                      {showAllMonths ? "Show less" : `Show all ${months.length} months`}
+                    </button>
+                  </div>
+
+                  {displayMonths.map((month) => (
+                    <div key={month}>
+                      {showAllMonths && (
+                        <h3 className="text-white font-medium mb-3">{month}</h3>
+                      )}
+                      <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+                        {grouped[month].map((date) => (
+                          <button
+                            key={date.toISOString()}
+                            onClick={() => {
+                              setSelectedDate(date.toISOString());
+                              setSelectedTime("");
+                              fetchBookedSlots(date);
+                            }}
+                            className={`p-3 rounded-lg text-center transition-all ${selectedDate === date.toISOString()
+                              ? "bg-purple-500 text-white"
+                              : "bg-white/10 text-gray-300 hover:bg-white/20"
+                              }`}
+                          >
+                            <div className="text-xs text-gray-400">
+                              {date.toLocaleDateString("en-US", { weekday: "short" })}
+                            </div>
+                            <div className="font-semibold">{date.getDate()}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
           {selectedDate && (
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-300 mb-3">

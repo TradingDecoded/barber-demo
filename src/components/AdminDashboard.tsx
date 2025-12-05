@@ -39,6 +39,7 @@ interface Demo {
   email: string;
   phone: string;
   logoUrl: string | null;
+  bookingWindowDays: number;
   createdAt: string;
   services: Service[];
   bookings: Booking[];
@@ -60,6 +61,13 @@ export default function AdminDashboard({ demo }: Props) {
   const [logoUrl, setLogoUrl] = useState(demo.logoUrl || "");
   const [uploading, setUploading] = useState(false);
   const [savingHours, setSavingHours] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>(demo.bookings);
+  const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
+  const [newAppointmentTime, setNewAppointmentTime] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [bookingFilter, setBookingFilter] = useState("upcoming");
+  const [bookingWindowDays, setBookingWindowDays] = useState(demo.bookingWindowDays || 60);
+  const [savingWindow, setSavingWindow] = useState(false);
   const defaultHours = [
     { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
     { day: 1, isOpen: true, openTime: "09:00", closeTime: "18:00" },
@@ -87,16 +95,16 @@ export default function AdminDashboard({ demo }: Props) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const upcomingBookings = demo.bookings.filter((b) => {
+  const upcomingBookings = bookings.filter((b) => {
     return new Date(b.appointmentTime) >= now && b.status === "confirmed";
   });
 
-  const todayBookings = demo.bookings.filter((b) => {
+  const todayBookings = bookings.filter((b) => {
     const d = new Date(b.appointmentTime);
     return d.toDateString() === now.toDateString() && b.status === "confirmed";
   });
 
-  const totalRevenue = demo.bookings
+  const totalRevenue = bookings
     .filter((b) => b.status === "confirmed")
     .reduce((sum, b) => sum + b.service.price, 0);
 
@@ -207,6 +215,61 @@ export default function AdminDashboard({ demo }: Props) {
     setSavingHours(false);
   };
 
+  const handleSaveBookingWindow = async () => {
+    setSavingWindow(true);
+    try {
+      const res = await fetch("/api/demos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demoId: demo.id, bookingWindowDays }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+    setSavingWindow(false);
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm("Cancel this appointment? The customer will be notified.")) return;
+    setActionLoading(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }),
+      });
+      if (res.ok) {
+        setBookings(bookings.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b)));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setActionLoading(null);
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleBooking || !newAppointmentTime) return;
+    setActionLoading(rescheduleBooking.id);
+    try {
+      const res = await fetch(`/api/bookings/${rescheduleBooking.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reschedule", newTime: newAppointmentTime }),
+      });
+      if (res.ok) {
+        setBookings(bookings.map((b) =>
+          b.id === rescheduleBooking.id ? { ...b, appointmentTime: newAppointmentTime } : b
+        ));
+        setRescheduleBooking(null);
+        setNewAppointmentTime("");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setActionLoading(null);
+  };
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-white/10">
@@ -262,7 +325,7 @@ export default function AdminDashboard({ demo }: Props) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="glass-card rounded-xl p-5">
                 <p className="text-gray-400 text-sm">Total Bookings</p>
-                <p className="text-3xl font-bold text-white mt-1">{demo.bookings.length}</p>
+                <p className="text-3xl font-bold text-white mt-1">{bookings.length}</p>
               </div>
               <div className="glass-card rounded-xl p-5">
                 <p className="text-gray-400 text-sm">Today</p>
@@ -337,8 +400,24 @@ export default function AdminDashboard({ demo }: Props) {
 
         {activeTab === "bookings" && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-white">All Bookings</h2>
-            {demo.bookings.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Bookings</h2>
+              <div className="flex gap-2">
+                {["all", "today", "upcoming", "completed", "cancelled"].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setBookingFilter(filter)}
+                    className={bookingFilter === filter
+                      ? "px-3 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium"
+                      : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
+                    }
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {bookings.length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center">
                 <p className="text-gray-400">No bookings yet. Share your link to get started!</p>
               </div>
@@ -352,13 +431,25 @@ export default function AdminDashboard({ demo }: Props) {
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Date/Time</th>
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Status</th>
                       <th className="text-right text-gray-400 text-sm font-medium px-5 py-3">Price</th>
+                      <th className="text-right text-gray-400 text-sm font-medium px-5 py-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {demo.bookings.map((b) => {
+                    {bookings.filter((b) => {
                       const isPast = new Date(b.appointmentTime) < now;
+                      const isToday = new Date(b.appointmentTime).toDateString() === now.toDateString();
+                      const isCancelled = b.status === "cancelled";
+
+                      if (bookingFilter === "today") return isToday && !isCancelled;
+                      if (bookingFilter === "upcoming") return !isPast && !isCancelled;
+                      if (bookingFilter === "completed") return isPast && !isCancelled;
+                      if (bookingFilter === "cancelled") return isCancelled;
+                      return true;
+                    }).map((b) => {
+                      const isPast = new Date(b.appointmentTime) < now;
+                      const isCancelled = b.status === "cancelled";
                       return (
-                        <tr key={b.id} className={isPast ? "opacity-50" : ""}>
+                        <tr key={b.id} className={isPast || isCancelled ? "opacity-50" : ""}>
                           <td className="px-5 py-4">
                             <p className="text-white font-medium">{b.customerName}</p>
                             <p className="text-gray-500 text-sm">{b.customerPhone}</p>
@@ -372,18 +463,80 @@ export default function AdminDashboard({ demo }: Props) {
                             <p className="text-gray-500 text-sm">{fmt(b.appointmentTime).time}</p>
                           </td>
                           <td className="px-5 py-4">
-                            <span className={isPast ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400" : "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400"}>
-                              {isPast ? "Completed" : b.status}
+                            <span className={
+                              isCancelled ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400" :
+                                isPast ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400" :
+                                  "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400"
+                            }>
+                              {isCancelled ? "Cancelled" : isPast ? "Completed" : b.status}
                             </span>
                           </td>
                           <td className="px-5 py-4 text-right">
                             <p className="text-white font-medium">${b.service.price}</p>
+                          </td>
+                          <td className="px-5 py-4 text-right space-x-2">
+                            {!isPast && !isCancelled && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setRescheduleBooking(b);
+                                    const dt = new Date(b.appointmentTime);
+                                    setNewAppointmentTime(dt.toISOString().slice(0, 16));
+                                  }}
+                                  disabled={actionLoading === b.id}
+                                  className="text-purple-400 hover:text-purple-300 text-sm"
+                                >
+                                  Reschedule
+                                </button>
+                                <button
+                                  onClick={() => handleCancelBooking(b.id)}
+                                  disabled={actionLoading === b.id}
+                                  className="text-red-400 hover:text-red-300 text-sm"
+                                >
+                                  {actionLoading === b.id ? "..." : "Cancel"}
+                                </button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+            {rescheduleBooking && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="glass-card rounded-xl p-6 max-w-md w-full mx-4 space-y-4">
+                  <h3 className="text-white font-semibold text-lg">Reschedule Appointment</h3>
+                  <p className="text-gray-400">
+                    {rescheduleBooking.customerName} - {rescheduleBooking.service.name}
+                  </p>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">New Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      value={newAppointmentTime}
+                      onChange={(e) => setNewAppointmentTime(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={handleReschedule}
+                      disabled={actionLoading === rescheduleBooking.id}
+                      className="flex-1 px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 disabled:opacity-50"
+                    >
+                      {actionLoading === rescheduleBooking.id ? "Saving..." : "Confirm"}
+                    </button>
+                    <button
+                      onClick={() => { setRescheduleBooking(null); setNewAppointmentTime(""); }}
+                      className="flex-1 px-4 py-2 rounded-lg border border-white/20 text-white text-sm hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -598,6 +751,31 @@ export default function AdminDashboard({ demo }: Props) {
               >
                 {savingHours ? "Saving..." : "Save Hours"}
               </button>
+            </div>
+            <div className="glass-card rounded-xl p-6 space-y-4">
+              <h3 className="text-white font-medium">Booking Window</h3>
+              <p className="text-gray-400 text-sm">How far in advance can customers book?</p>
+              <div className="flex items-center gap-4">
+                <select
+                  value={bookingWindowDays}
+                  onChange={(e) => setBookingWindowDays(Number(e.target.value))}
+                  className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                >
+                  <option value={14}>14 days</option>
+                  <option value={30}>30 days</option>
+                  <option value={60}>60 days</option>
+                  <option value={90}>90 days</option>
+                  <option value={180}>6 months</option>
+                  <option value={365}>1 year</option>
+                </select>
+                <button
+                  onClick={handleSaveBookingWindow}
+                  disabled={savingWindow}
+                  className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 disabled:opacity-50"
+                >
+                  {savingWindow ? "Saving..." : "Save"}
+                </button>
+              </div>
             </div>
             <div className="glass-card rounded-xl p-6 space-y-4">
               <h3 className="text-white font-medium">Demo Code</h3>

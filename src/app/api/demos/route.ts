@@ -52,3 +52,24 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { demoId, bookingWindowDays } = body;
+
+    if (!demoId) {
+      return NextResponse.json({ error: "Demo ID required" }, { status: 400 });
+    }
+
+    const demo = await prisma.demo.update({
+      where: { id: demoId },
+      data: { bookingWindowDays },
+    });
+
+    return NextResponse.json({ success: true, demo });
+  } catch (error) {
+    console.error("Error updating demo:", error);
+    return NextResponse.json({ error: "Failed to update demo" }, { status: 500 });
+  }
+}
