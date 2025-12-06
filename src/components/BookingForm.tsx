@@ -122,7 +122,7 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     const today = new Date();
     const windowDays = demo.bookingWindowDays || 60;
 
-    for (let i = 1; i <= windowDays; i++) {
+    for (let i = 0; i <= windowDays; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       const dayHours = getHoursForDay(date.getDay());
@@ -209,7 +209,25 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
   };
 
   const selectedDayOfWeek = selectedDate ? new Date(selectedDate).getDay() : -1;
-  const timeSlots = selectedDayOfWeek >= 0 ? generateTimeSlots(selectedDayOfWeek) : [];
+  const allTimeSlots = selectedDayOfWeek >= 0 ? generateTimeSlots(selectedDayOfWeek) : [];
+
+  // Filter out past times if selected date is today
+  const timeSlots = allTimeSlots.filter((time) => {
+    if (!selectedDate) return true;
+    const selected = new Date(selectedDate);
+    const now = new Date();
+    if (selected.toDateString() !== now.toDateString()) return true;
+
+    const [timePart, period] = time.split(" ");
+    const [hrs, mins] = timePart.split(":").map(Number);
+    let hour = hrs;
+    if (period === "PM" && hour !== 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+
+    const slotTime = new Date(now);
+    slotTime.setHours(hour, mins, 0, 0);
+    return slotTime > now;
+  });
 
   if (success) {
     return (
