@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import AdminStaff from "./AdminStaff";
 import { useRouter } from "next/navigation";
 
 interface Service {
@@ -37,6 +38,32 @@ interface BlockedDate {
   reason: string | null;
 }
 
+interface StaffHours {
+  id: string;
+  day: number;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
+interface StaffServiceItem {
+  id: string;
+  serviceId: string;
+  service: { id: string; name: string };
+}
+
+interface Staff {
+  id: string;
+  name: string;
+  phone: string | null;
+  photoUrl: string | null;
+  bio: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  hours: StaffHours[];
+  services: StaffServiceItem[];
+}
+
 interface Demo {
   id: string;
   slug: string;
@@ -45,12 +72,14 @@ interface Demo {
   email: string;
   phone: string;
   logoUrl: string | null;
+  accentColor: string;
   bookingWindowDays: number;
   createdAt: string;
   services: Service[];
   bookings: Booking[];
   hours: BusinessHours[];
   blockedDates: BlockedDate[];
+  staff: Staff[];
 }
 
 interface Props {
@@ -403,6 +432,7 @@ export default function AdminDashboard({ demo }: Props) {
           <button onClick={() => setActiveTab("bookings")} className={activeTab === "bookings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Bookings</button>
           <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Services</button>
           <button onClick={() => setActiveTab("closures")} className={activeTab === "closures" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Closures</button>
+          <button onClick={() => setActiveTab("staff")} className={activeTab === "staff" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Staff</button>
           <button onClick={() => setActiveTab("settings")} className={activeTab === "settings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Settings</button>
         </div>
       </div>
@@ -846,6 +876,15 @@ export default function AdminDashboard({ demo }: Props) {
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab === "staff" && (
+          <AdminStaff
+            slug={demo.slug}
+            initialStaff={demo.staff}
+            services={services}
+            accentColor={demo.accentColor || "#8b5cf6"}
+          />
         )}
 
         {activeTab === "settings" && (

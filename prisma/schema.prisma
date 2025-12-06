@@ -24,6 +24,46 @@ model Demo {
   bookings    Booking[]
   hours         BusinessHours[]
   blockedDates  BlockedDate[]
+  staff         Staff[]
+}
+
+model Staff {
+  id        String   @id @default(uuid())
+  demoId    String
+  demo      Demo     @relation(fields: [demoId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  photoUrl  String?
+  bio       String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  hours     StaffHours[]
+  services  StaffService[]
+  bookings  Booking[]
+}
+
+model StaffHours {
+  id        String  @id @default(uuid())
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  day       Int     // 0 = Sunday, 1 = Monday, etc.
+  isOpen    Boolean @default(true)
+  openTime  String  @default("09:00")
+  closeTime String  @default("18:00")
+
+  @@unique([staffId, day])
+}
+
+model StaffService {
+  id        String  @id @default(uuid())
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, serviceId])
 }
 
 model BusinessHours {
@@ -47,6 +87,7 @@ model Service {
   price           Int
   createdAt       DateTime  @default(now())
   bookings        Booking[]
+  staffServices   StaffService[]
 }
 
 model Booking {
@@ -55,6 +96,8 @@ model Booking {
   demo            Demo     @relation(fields: [demoId], references: [id], onDelete: Cascade)
   serviceId       String
   service         Service  @relation(fields: [serviceId], references: [id])
+  staffId         String?
+  staff           Staff?   @relation(fields: [staffId], references: [id])
   customerName    String
   customerPhone   String
   customerEmail   String?

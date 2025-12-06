@@ -16,9 +16,17 @@ export default async function AdminPage({ params }: PageProps) {
       services: true,
       hours: true,
       blockedDates: true,
+      staff: {
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          hours: true,
+          services: { include: { service: true } },
+        },
+      },
       bookings: {
         include: {
           service: true,
+          staff: true,
         },
         orderBy: {
           appointmentTime: "asc",
@@ -58,6 +66,13 @@ export default async function AdminPage({ params }: PageProps) {
         ...b.service,
         createdAt: b.service.createdAt.toISOString(),
       },
+      staff: b.staff ? { id: b.staff.id, name: b.staff.name, photoUrl: b.staff.photoUrl } : null,
+    })),
+    staff: demo.staff.map((s) => ({
+      ...s,
+      createdAt: s.createdAt.toISOString(),
+      hours: s.hours,
+      services: s.services,
     })),
   };
 
