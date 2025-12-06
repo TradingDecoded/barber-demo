@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     },
     include: {
       service: true,
+      staff: true,
     },
     orderBy: {
       appointmentTime: "asc",
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
         durationMinutes: b.service.durationMinutes,
         price: b.service.price,
       },
+      staff: b.staff ? { id: b.staff.id, name: b.staff.name } : null,
     }))
   );
 }

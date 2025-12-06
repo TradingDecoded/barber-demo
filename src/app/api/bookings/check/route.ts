@@ -48,19 +48,32 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       select: {
         appointmentTime: true,
+        service: {
+          select: {
+            durationMinutes: true,
+          },
+        },
       },
     });
 
-    const bookedTimes = bookings.map((b) => {
+    const bookedTimes: string[] = [];
+    
+    bookings.forEach((b) => {
       const d = new Date(b.appointmentTime);
-      // Adjust for client timezone
-      const adjusted = new Date(d.getTime() - (offset * 60 * 1000));
-      const hour = adjusted.getUTCHours();
-      const min = adjusted.getUTCMinutes();
-      const period = hour >= 12 ? "PM" : "AM";
-      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-      const displayMin = min.toString().padStart(2, "0");
-      return `${displayHour}:${displayMin} ${period}`;
+      const duration = b.service.durationMinutes;
+      const slotsNeeded = Math.ceil(duration / 15);
+      
+      for (let i = 0; i < slotsNeeded; i++) {
+        const slotTime = new Date(d.getTime() + (i * 15 * 60 * 1000));
+        // Adjust for client timezone
+        const adjusted = new Date(slotTime.getTime() - (offset * 60 * 1000));
+        const hour = adjusted.getUTCHours();
+        const min = adjusted.getUTCMinutes();
+        const period = hour >= 12 ? "PM" : "AM";
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        const displayMin = min.toString().padStart(2, "0");
+        bookedTimes.push(`${displayHour}:${displayMin} ${period}`);
+      }
     });
 
     return NextResponse.json({ bookedTimes });

@@ -22,6 +22,7 @@ interface Booking {
   reviewSent: boolean;
   createdAt: string;
   service: Service;
+  staff: { id: string; name: string } | null;
 }
 
 interface BusinessHours {
@@ -156,16 +157,21 @@ export default function AdminDashboard({ demo }: Props) {
   };
 
   const upcomingBookings = bookings.filter((b) => {
-    return new Date(b.appointmentTime) >= now && b.status === "confirmed";
+    const apptDate = new Date(b.appointmentTime);
+    const isAfterToday = apptDate.toDateString() !== now.toDateString() && apptDate > now;
+    return isAfterToday && b.status === "confirmed";
   });
 
   const todayBookings = bookings.filter((b) => {
     const d = new Date(b.appointmentTime);
-    return d.toDateString() === now.toDateString() && b.status === "confirmed";
+    return d.toDateString() === now.toDateString() && b.status !== "cancelled";
   });
 
   const totalRevenue = bookings
-    .filter((b) => b.status === "confirmed")
+    .filter((b) => {
+      const isPast = new Date(b.appointmentTime) < now;
+      return b.status === "completed" || (b.status === "confirmed" && isPast);
+    })
     .reduce((sum, b) => sum + b.service.price, 0);
 
   const fmt = (dateStr: string) => {
@@ -467,21 +473,30 @@ export default function AdminDashboard({ demo }: Props) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {todayBookings.map((b) => (
-                    <div key={b.id} className="glass-card rounded-xl p-5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-2xl font-bold text-purple-400">{fmt(b.appointmentTime).time}</div>
-                        <div>
-                          <p className="text-white font-medium">{b.customerName}</p>
-                          <p className="text-gray-400 text-sm">{b.service.name}</p>
+                  {todayBookings.map((b) => {
+                    const isPast = new Date(b.appointmentTime) < now;
+                    const isCompleted = b.status === "completed" || (b.status === "confirmed" && isPast);
+                    const isNoShow = b.status === "noshow";
+                    return (
+                      <div key={b.id} className={`glass-card rounded-xl p-5 flex items-center justify-between ${isCompleted || isNoShow ? "opacity-50" : ""}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`text-2xl font-bold ${isNoShow ? "text-orange-400" : isCompleted ? "text-gray-400" : "text-purple-400"}`}>{fmt(b.appointmentTime).time}</div>
+                          <div>
+                            <p className="text-white font-medium">{b.customerName}</p>
+                            <p className="text-gray-400 text-sm">{b.service.name} {b.staff ? `• ${b.staff.name}` : ""}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-4">
+                          {isNoShow && <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400">No Show</span>}
+                          {isCompleted && !isNoShow && <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">Completed</span>}
+                          <div>
+                            <p className="text-white font-medium">${b.service.price}</p>
+                            <p className="text-gray-500 text-sm">{b.customerPhone}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-white font-medium">${b.service.price}</p>
-                        <p className="text-gray-500 text-sm">{b.customerPhone}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -502,7 +517,7 @@ export default function AdminDashboard({ demo }: Props) {
                         </div>
                         <div>
                           <p className="text-white font-medium">{b.customerName}</p>
-                          <p className="text-gray-400 text-sm">{b.service.name}</p>
+                          <p className="text-gray-400 text-sm">{b.service.name} {b.staff ? `• ${b.staff.name}` : ""}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -521,8 +536,8 @@ export default function AdminDashboard({ demo }: Props) {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Bookings</h2>
-              <div className="flex gap-2">
-                {["all", "today", "upcoming", "completed", "cancelled"].map((filter) => (
+              <div className="flex gap-2 flex-wrap">
+                {["all", "today", "upcoming", "completed", "noshow", "cancelled"].map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setBookingFilter(filter)}
@@ -531,7 +546,7 @@ export default function AdminDashboard({ demo }: Props) {
                       : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
                     }
                   >
-                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    {filter === "noshow" ? "No Show" : filter.charAt(0).toUpperCase() + filter.slice(1)}
                   </button>
                 ))}
               </div>
@@ -547,6 +562,7 @@ export default function AdminDashboard({ demo }: Props) {
                     <tr>
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Customer</th>
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Service</th>
+                      <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Barber</th>
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Date/Time</th>
                       <th className="text-left text-gray-400 text-sm font-medium px-5 py-3">Status</th>
                       <th className="text-right text-gray-400 text-sm font-medium px-5 py-3">Price</th>
@@ -558,10 +574,13 @@ export default function AdminDashboard({ demo }: Props) {
                       const isPast = new Date(b.appointmentTime) < now;
                       const isToday = new Date(b.appointmentTime).toDateString() === now.toDateString();
                       const isCancelled = b.status === "cancelled";
+                      const isNoShow = b.status === "noshow";
+                      const isCompleted = b.status === "completed";
 
-                      if (bookingFilter === "today") return isToday && !isCancelled;
-                      if (bookingFilter === "upcoming") return !isPast && !isCancelled;
-                      if (bookingFilter === "completed") return isPast && !isCancelled;
+                      if (bookingFilter === "today") return isToday && !isCancelled && !isNoShow;
+                      if (bookingFilter === "upcoming") return !isPast && b.status === "confirmed";
+                      if (bookingFilter === "completed") return isCompleted || (isPast && b.status === "confirmed");
+                      if (bookingFilter === "noshow") return isNoShow;
                       if (bookingFilter === "cancelled") return isCancelled;
                       return true;
                     }).map((b) => {
@@ -578,16 +597,24 @@ export default function AdminDashboard({ demo }: Props) {
                             <p className="text-gray-500 text-sm">{b.service.durationMinutes} min</p>
                           </td>
                           <td className="px-5 py-4">
+                            <p className="text-white">{b.staff?.name || "Any"}</p>
+                          </td>
+                          <td className="px-5 py-4">
                             <p className="text-white">{fmt(b.appointmentTime).date}</p>
                             <p className="text-gray-500 text-sm">{fmt(b.appointmentTime).time}</p>
                           </td>
                           <td className="px-5 py-4">
                             <span className={
-                              isCancelled ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400" :
-                                isPast ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400" :
-                                  "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400"
+                              b.status === "cancelled" ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400" :
+                                b.status === "noshow" ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400" :
+                                  b.status === "completed" ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400" :
+                                    isPast ? "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400" :
+                                      "inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400"
                             }>
-                              {isCancelled ? "Cancelled" : isPast ? "Completed" : b.status}
+                              {b.status === "cancelled" ? "Cancelled" :
+                                b.status === "noshow" ? "No Show" :
+                                  b.status === "completed" ? "Completed" :
+                                    isPast ? "Completed" : "confirmed"}
                             </span>
                           </td>
                           <td className="px-5 py-4 text-right">

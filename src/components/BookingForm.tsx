@@ -117,7 +117,7 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
       const displayMin = currentMin.toString().padStart(2, "0");
       slots.push(`${displayHour}:${displayMin} ${period}`);
 
-      currentMin += 30;
+      currentMin += 15;
       if (currentMin >= 60) {
         currentMin = 0;
         currentHour++;
@@ -477,16 +477,20 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
                 <p className="text-gray-400 text-center py-4">Loading available times...</p>
               ) : timeSlots.length > 0 ? (
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                  {timeSlots.map((time) => {
-                    const isBooked = bookedSlots.includes(time);
+                  {timeSlots.map((time, index) => {
+                    const slotsNeeded = Math.ceil((selectedService?.durationMinutes || 30) / 15);
+                    const slotsToCheck = timeSlots.slice(index, index + slotsNeeded);
+                    const hasEnoughSlots = slotsToCheck.length === slotsNeeded;
+                    const anySlotBooked = slotsToCheck.some(slot => bookedSlots.includes(slot));
+                    const isUnavailable = !hasEnoughSlots || anySlotBooked;
                     return (
                       <button
                         key={time}
-                        onClick={() => !isBooked && setSelectedTime(time)}
-                        disabled={isBooked}
+                        onClick={() => !isUnavailable && setSelectedTime(time)}
+                        disabled={isUnavailable}
                         className={`p-3 rounded-lg text-center transition-all ${selectedTime === time
                           ? "bg-purple-500 text-white"
-                          : isBooked
+                          : isUnavailable
                             ? "bg-white/5 text-gray-600 cursor-not-allowed line-through"
                             : "bg-white/10 text-gray-300 hover:bg-white/20"
                           }`}

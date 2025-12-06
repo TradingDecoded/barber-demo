@@ -31,36 +31,46 @@
   - Booking page shows only barbers who perform selected service
   - staffId saved with bookings
   - SMS notifications include barber name
+- [x] Show staff name in Admin Bookings tab and Overview
+- [x] TV Display - filter by barber, shows all barbers' current appointments
+- [x] 15-minute time slots with duration-based blocking
+- [x] TV Display Complete/No Show buttons
+- [x] Proper status tracking (confirmed, completed, noshow, cancelled)
+- [x] Revenue calculation only counts completed appointments
+- [x] Today's Schedule shows all appointments with status badges
 
 ## In Progress / Next Up
 
-### 1. Staff Feature Polish
-- [ ] Show staff name in Admin Bookings tab
-- [ ] Show staff name in Admin Overview upcoming appointments
-- [ ] TV Display - group appointments by barber
-- [ ] Filter bookings by staff member in admin
-- [ ] Unassigned booking handling ("Any Available" option - shop owner assigns or auto-assign)
-
-### 2. 15-Minute Time Slots & Duration-Based Blocking
-- [ ] Change booking intervals from 30 min to 15 min
-- [ ] Block multiple time slots based on service duration (e.g., 45 min service blocks 3 slots)
-- [ ] Smarter availability calculation per barber
-
-### 3. TV Display Enhancements
-- [ ] "Complete" button - mark job done early, free up remaining time
-- [ ] "No Show" button - clear blocked time for walk-ins, optionally send SMS
-- [ ] Real-time status updates
-
-### 4. Walk-in Availability Indicator (Customer Side)
+### 1. Walk-in Availability Indicator (Customer Side)
 - [ ] Show real-time chair availability on booking page
 - [ ] "🟢 2 barbers available now" / "🟡 Next available in 30 min" / "🔴 Fully booked until 3:00 PM"
 - [ ] Drive foot traffic for immediate openings
 
-### 5. Staff Photo Upload via SMS Handoff
+### 2. Staff Photo Upload via SMS Handoff
 - [ ] Generate unique token/link when staff added
 - [ ] SMS sent to staff member with upload link
 - [ ] Simple mobile-friendly upload page
 - [ ] Photo automatically attached to staff profile
+
+### 3. Customer Self-Service Cancel/Reschedule
+- [ ] Generate unique manage link per booking
+- [ ] Include manage link in confirmation SMS
+- [ ] Mobile-friendly page to view booking details
+- [ ] Cancel button with confirmation
+- [ ] Reschedule option showing available slots
+- [ ] SMS notification to shop owner on changes
+
+### 4. Staff Feature Polish (Remaining)
+- [ ] Filter bookings by staff member in admin
+- [ ] Unassigned booking handling ("Any Available" option - shop owner assigns or auto-assign)
+
+### 6. Customer Self-Service Cancel/Reschedule
+- [ ] Generate unique manage link per booking
+- [ ] Include manage link in confirmation SMS
+- [ ] Mobile-friendly page to view booking details
+- [ ] Cancel button with confirmation
+- [ ] Reschedule option showing available slots
+- [ ] SMS notification to shop owner on changes
 
 ## Planned Features (Future)
 

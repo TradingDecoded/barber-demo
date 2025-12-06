@@ -13,12 +13,17 @@ export default async function TVPage({ params }: PageProps) {
     where: { slug },
     include: {
       services: true,
+      staff: {
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+      },
       bookings: {
         where: {
-          status: "confirmed",
+          status: { not: "cancelled" },
         },
         include: {
           service: true,
+          staff: true,
         },
         orderBy: {
           appointmentTime: "asc",
@@ -36,14 +41,20 @@ export default async function TVPage({ params }: PageProps) {
     slug: demo.slug,
     shopName: demo.shopName,
     logoUrl: demo.logoUrl,
+    staff: demo.staff.map((s) => ({
+      id: s.id,
+      name: s.name,
+    })),
     bookings: demo.bookings.map((b) => ({
       id: b.id,
       customerName: b.customerName,
       appointmentTime: b.appointmentTime.toISOString(),
+      status: b.status,
       service: {
         name: b.service.name,
         durationMinutes: b.service.durationMinutes,
       },
+      staff: b.staff ? { id: b.staff.id, name: b.staff.name } : null,
     })),
   };
 

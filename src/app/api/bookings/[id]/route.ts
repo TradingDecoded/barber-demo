@@ -69,6 +69,24 @@ export async function PATCH(
       return NextResponse.json({ success: true });
     }
 
+    if (action === "complete") {
+      await prisma.booking.update({
+        where: { id },
+        data: { status: "completed" },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "noshow") {
+      await prisma.booking.update({
+        where: { id },
+        data: { status: "noshow" },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Error updating booking:", error);
