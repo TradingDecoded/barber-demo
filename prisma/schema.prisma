@@ -110,6 +110,7 @@ model Booking {
   reviewSent      Boolean  @default(false)
   recurringGroupId String?
   recurringType   String?
+  manageToken     String?  @unique
   createdAt       DateTime @default(now())
 }
 

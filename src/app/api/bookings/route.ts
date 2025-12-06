@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSMS } from "@/lib/twilio";
 import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 
 export async function GET(request: NextRequest) {
   const demoId = request.nextUrl.searchParams.get("demoId");
@@ -106,6 +107,8 @@ export async function POST(request: NextRequest) {
         apptDate.setMonth(baseDate.getMonth() + i);
       }
 
+      const manageToken = crypto.randomBytes(16).toString("hex");
+      
       const booking = await prisma.booking.create({
         data: {
           demoId,
@@ -117,6 +120,7 @@ export async function POST(request: NextRequest) {
           appointmentTime: apptDate,
           recurringGroupId,
           recurringType: recurring !== "none" ? recurring : null,
+          manageToken,
         },
       });
 
@@ -143,6 +147,7 @@ export async function POST(request: NextRequest) {
       staffName = staff?.name;
     }
 
+    const manageUrl = `https://barber-demo.ai.jdemar.com/manage/${firstAppt.manageToken}`;
     let customerMessage = `✅ Booking confirmed!\n\n${service.name} at ${demo.shopName}${staffName ? `\n💈 with ${staffName}` : ''}\n📅 ${formattedDate}\n⏰ ${formattedTime}`;
     let ownerMessage = `📅 New booking!\n\n${customerName} booked a ${service.name}${staffName ? ` with ${staffName}` : ''}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n📱 ${customerPhone}`;
 
@@ -151,7 +156,7 @@ export async function POST(request: NextRequest) {
       ownerMessage += `\n\n🔄 Recurring: ${recurring} × ${recurringCount}`;
     }
 
-    customerMessage += "\n\nSee you then!";
+    customerMessage += `\n\nManage your booking: ${manageUrl}`;
 
     await sendSMS(customerPhone, customerMessage);
     await sendSMS(demo.phone, ownerMessage);
