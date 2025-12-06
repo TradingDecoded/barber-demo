@@ -98,6 +98,7 @@ export default function AdminDashboard({ demo }: Props) {
   const [uploading, setUploading] = useState(false);
   const [savingHours, setSavingHours] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>(demo.bookings);
+  const [staff, setStaff] = useState<Staff[]>(demo.staff);
   const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
   const [newAppointmentTime, setNewAppointmentTime] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -881,9 +882,10 @@ export default function AdminDashboard({ demo }: Props) {
         {activeTab === "staff" && (
           <AdminStaff
             slug={demo.slug}
-            initialStaff={demo.staff}
+            initialStaff={staff}
             services={services}
             accentColor={demo.accentColor || "#8b5cf6"}
+            onStaffChange={setStaff}
           />
         )}
 

@@ -16,6 +16,20 @@ interface BusinessHours {
   closeTime: string;
 }
 
+interface StaffService {
+  serviceId: string;
+  service: { id: string; name: string };
+}
+
+interface Staff {
+  id: string;
+  name: string;
+  photoUrl: string | null;
+  bio: string | null;
+  hours: BusinessHours[];
+  services: StaffService[];
+}
+
 interface Demo {
   id: string;
   slug: string;
@@ -30,11 +44,13 @@ interface Demo {
 interface BookingFormProps {
   demo: Demo;
   services: Service[];
+  staff: Staff[];
 }
 
-export default function BookingForm({ demo, services }: BookingFormProps) {
+export default function BookingForm({ demo, services, staff }: BookingFormProps) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,7 +88,8 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
     setLoadingSlots(true);
     try {
       const offset = date.getTimezoneOffset();
-      const res = await fetch(`/api/bookings/check?demoId=${demo.id}&date=${date.toISOString()}&offset=${offset}`);
+      const staffParam = selectedStaff ? `&staffId=${selectedStaff.id}` : '';
+      const res = await fetch(`/api/bookings/check?demoId=${demo.id}&date=${date.toISOString()}&offset=${offset}${staffParam}`);
       if (res.ok) {
         const data = await res.json();
         setBookedSlots(data.bookedTimes || []);
@@ -185,6 +202,7 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
         body: JSON.stringify({
           demoId: demo.id,
           serviceId: selectedService.id,
+          staffId: selectedStaff?.id || null,
           customerName: customerInfo.name,
           customerPhone: customerInfo.phone,
           customerEmail: customerInfo.email,
@@ -237,7 +255,7 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
           {recurring !== "none" ? `${recurringCount} Appointments Booked!` : "Booking Confirmed!"}
         </h2>
         <p className="text-gray-400 mb-2">
-          Your {selectedService?.name} at {demo.shopName} {recurring !== "none" ? "starts" : "is booked for"}:
+          Your {selectedService?.name}{selectedStaff ? ` with ${selectedStaff.name}` : ''} at {demo.shopName} {recurring !== "none" ? "starts" : "is booked for"}:
         </p>
         <p className="text-xl text-purple-400 font-semibold mb-4">
           {new Date(selectedDate).toLocaleDateString("en-US", {
@@ -327,6 +345,58 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             Pick a Date & Time
           </h2>
+
+          {/* Staff Selection */}
+          {staff.length > 0 && (
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Select Your Barber
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedStaff(null);
+                    setSelectedDate("");
+                    setSelectedTime("");
+                  }}
+                  className={`p-4 rounded-xl border text-center transition-all ${selectedStaff === null
+                      ? "border-purple-500 bg-purple-500/20"
+                      : "border-white/10 hover:border-white/30"
+                    }`}
+                >
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center text-xl">
+                    👥
+                  </div>
+                  <p className="text-white font-medium text-sm">Any Available</p>
+                </button>
+                {staff
+                  .filter(s => s.services.some(ss => ss.serviceId === selectedService?.id))
+                  .map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setSelectedStaff(s);
+                        setSelectedDate("");
+                        setSelectedTime("");
+                      }}
+                      className={`p-4 rounded-xl border text-center transition-all ${selectedStaff?.id === s.id
+                          ? "border-purple-500 bg-purple-500/20"
+                          : "border-white/10 hover:border-white/30"
+                        }`}
+                    >
+                      <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                        {s.photoUrl ? (
+                          <img src={s.photoUrl} alt={s.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xl text-gray-400">{s.name.charAt(0)}</span>
+                        )}
+                      </div>
+                      <p className="text-white font-medium text-sm">{s.name}</p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <div className="mb-8">
 
@@ -565,6 +635,12 @@ export default function BookingForm({ demo, services }: BookingFormProps) {
                 <span>Service:</span>
                 <span className="font-semibold">{selectedService?.name}</span>
               </div>
+              {selectedStaff && (
+                <div className="flex justify-between">
+                  <span>Barber:</span>
+                  <span className="font-semibold">{selectedStaff.name}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Date:</span>
                 <span className="font-semibold">

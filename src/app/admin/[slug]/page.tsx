@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import AdminDashboard from "@/components/AdminDashboard";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

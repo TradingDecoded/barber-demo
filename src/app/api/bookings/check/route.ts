@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const demoId = searchParams.get("demoId");
     const dateStr = searchParams.get("date");
     const offsetStr = searchParams.get("offset");
+    const staffId = searchParams.get("staffId");
 
     if (!demoId || !dateStr) {
       return NextResponse.json(
@@ -23,15 +24,28 @@ export async function GET(request: NextRequest) {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const bookings = await prisma.booking.findMany({
-      where: {
-        demoId,
-        appointmentTime: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-        status: "confirmed",
+    // Build where clause
+    const whereClause: {
+      demoId: string;
+      appointmentTime: { gte: Date; lte: Date };
+      status: string;
+      staffId?: string;
+    } = {
+      demoId,
+      appointmentTime: {
+        gte: startOfDay,
+        lte: endOfDay,
       },
+      status: "confirmed",
+    };
+
+    // If staffId provided, only check that staff's bookings
+    if (staffId) {
+      whereClause.staffId = staffId;
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: whereClause,
       select: {
         appointmentTime: true,
       },

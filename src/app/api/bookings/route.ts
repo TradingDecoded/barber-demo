@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const {
       demoId,
       serviceId,
+      staffId,
       customerName,
       customerPhone,
       customerEmail,
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
         data: {
           demoId,
           serviceId,
+          staffId: staffId || null,
           customerName,
           customerPhone,
           customerEmail: customerEmail || null,
@@ -132,8 +134,15 @@ export async function POST(request: NextRequest) {
       hour12: true,
     });
 
-    let customerMessage = `✅ Booking confirmed!\n\n${service.name} at ${demo.shopName}\n📅 ${formattedDate}\n⏰ ${formattedTime}`;
-    let ownerMessage = `📅 New booking!\n\n${customerName} booked a ${service.name}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n📱 ${customerPhone}`;
+    // Get staff name if staffId provided
+    let staffName = null;
+    if (staffId) {
+      const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+      staffName = staff?.name;
+    }
+
+    let customerMessage = `✅ Booking confirmed!\n\n${service.name} at ${demo.shopName}${staffName ? `\n💈 with ${staffName}` : ''}\n📅 ${formattedDate}\n⏰ ${formattedTime}`;
+    let ownerMessage = `📅 New booking!\n\n${customerName} booked a ${service.name}${staffName ? ` with ${staffName}` : ''}\n📅 ${formattedDate}\n⏰ ${formattedTime}\n📱 ${customerPhone}`;
 
     if (recurring !== "none") {
       customerMessage += `\n\n🔄 Repeating ${recurring} for ${recurringCount} appointments`;
