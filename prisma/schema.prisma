@@ -18,6 +18,7 @@ model Demo {
   accentColor String    @default("#8b5cf6")
   colorPalette String?
   bookingWindowDays Int @default(60)
+  timezone    String    @default("America/New_York")
   onboarded   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   services    Service[]
@@ -37,6 +38,8 @@ model Staff {
   bio       String?
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
+  photoUploadToken  String?  @unique
+  photoUploadExpires DateTime?
   createdAt DateTime @default(now())
   
   hours     StaffHours[]

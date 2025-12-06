@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import BookingForm from "@/components/BookingForm";
+import WalkInAvailability from "@/components/WalkInAvailability";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -67,6 +68,7 @@ export default async function DemoPage({ params }: PageProps) {
       {/* Booking Section */}
       <section className="pb-20 px-6">
         <div className="max-w-4xl mx-auto">
+          <WalkInAvailability demoId={demo.id} />
           <BookingForm 
             demo={{
               ...demo, 

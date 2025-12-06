@@ -188,6 +188,29 @@ export default function AdminStaff({ slug, initialStaff, services, accentColor, 
     setLoading(false);
   };
 
+  const handleSendPhotoLink = async (staffId: string) => {
+    if (!confirm('Send a photo upload link via SMS to this staff member?')) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/staff/${staffId}/send-photo-link`, {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Photo upload link sent successfully!');
+      } else {
+        alert(data.error || 'Failed to send link');
+      }
+    } catch (error) {
+      alert('Failed to send link');
+    }
+
+    setLoading(false);
+  };
+
   const openHoursEditor = (s: Staff) => {
     setEditingHoursId(s.id);
     const existingHours = s.hours || [];
@@ -536,7 +559,7 @@ export default function AdminStaff({ slug, initialStaff, services, accentColor, 
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => openHoursEditor(s)}
                     className="text-sm px-3 py-1 border border-white/20 text-gray-400 rounded hover:bg-white/5"
@@ -549,6 +572,14 @@ export default function AdminStaff({ slug, initialStaff, services, accentColor, 
                   >
                     Services
                   </button>
+                  {s.phone && (
+                    <button
+                      onClick={() => handleSendPhotoLink(s.id)}
+                      className="text-sm px-3 py-1 border border-purple-500/30 text-purple-400 rounded hover:bg-purple-500/10"
+                    >
+                      📷 Send Photo Link
+                    </button>
+                  )}
                   <button
                     onClick={() => handleEdit(s)}
                     className="text-sm px-3 py-1 border border-white/20 text-gray-400 rounded hover:bg-white/5"

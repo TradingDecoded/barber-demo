@@ -89,7 +89,8 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
     try {
       const offset = date.getTimezoneOffset();
       const staffParam = selectedStaff ? `&staffId=${selectedStaff.id}` : '';
-      const res = await fetch(`/api/bookings/check?demoId=${demo.id}&date=${date.toISOString()}&offset=${offset}${staffParam}`);
+      const serviceParam = selectedService ? `&serviceId=${selectedService.id}` : '';
+      const res = await fetch(`/api/bookings/check?demoId=${demo.id}&date=${date.toISOString()}&offset=${offset}${staffParam}${serviceParam}`);
       if (res.ok) {
         const data = await res.json();
         setBookedSlots(data.bookedTimes || []);
