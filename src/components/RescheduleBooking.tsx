@@ -206,7 +206,7 @@ export default function RescheduleBooking({ booking }: RescheduleBookingProps) {
             at {selectedTime}
           </span>
         </p>
-        
+        <a
           href={`/manage/${booking.manageToken}`}
           className="inline-block px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
         >
@@ -316,7 +316,7 @@ export default function RescheduleBooking({ booking }: RescheduleBookingProps) {
         
           href={`/manage/${booking.manageToken}`}
           className="flex-1 py-3 px-4 border border-white/20 text-gray-400 text-center rounded-lg hover:bg-white/5"
-        >
+        <a>
           Cancel
         </a>
         <button

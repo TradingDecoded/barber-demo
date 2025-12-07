@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { downloadICSFile } from "@/lib/calendar";
 
 interface ManageBookingProps {
   booking: {
@@ -36,6 +37,16 @@ export default function ManageBooking({ booking }: ManageBookingProps) {
   const appointmentDate = new Date(booking.appointmentTime);
   const isPast = appointmentDate < new Date();
   const isConfirmed = status === "confirmed";
+
+  const handleAddToCalendar = () => {
+    downloadICSFile({
+      title: `${booking.service.name} at ${booking.demo.shopName}`,
+      description: `Appointment${booking.staff ? ` with ${booking.staff.name}` : ''}. Service: ${booking.service.name} (${booking.service.durationMinutes} min, $${booking.service.price})`,
+      location: booking.demo.shopName,
+      startTime: appointmentDate,
+      durationMinutes: booking.service.durationMinutes,
+    }, `${booking.demo.shopName.replace(/\s+/g, '-')}-appointment.ics`);
+  };
 
   const formattedDate = appointmentDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -79,10 +90,10 @@ export default function ManageBooking({ booking }: ManageBookingProps) {
         <p className="text-gray-400 mb-6">
           Your appointment has been cancelled. {booking.demo.shopName} has been notified.
         </p>
-        
-          href={`/demo/${booking.demo.slug}`}
+        <a
+        href={`/demo/${booking.demo.slug}`}
           className="inline-block px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-        {">"}
+        >
           Book a New Appointment
         </a>
       </div>
@@ -169,10 +180,17 @@ export default function ManageBooking({ booking }: ManageBookingProps) {
       {/* Actions */}
       {isConfirmed && !isPast && (
         <div className="space-y-3">
-          
+          <button
+            onClick={handleAddToCalendar}
+            className="w-full py-3 px-4 bg-white/10 text-white text-center rounded-lg hover:bg-white/20 font-medium flex items-center justify-center gap-2"
+          >
+            <span>📅</span>
+            Add to Calendar
+          </button>
+          <a
             href={`/manage/${booking.manageToken}/reschedule`}
             className="block w-full py-3 px-4 bg-purple-500 text-white text-center rounded-lg hover:bg-purple-600 font-medium"
-          {">"}
+          >
             Reschedule Appointment
           </a>
           <button

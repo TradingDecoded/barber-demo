@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { downloadICSFile } from "@/lib/calendar";
 
 interface Service {
   id: string;
@@ -249,6 +250,25 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
   });
 
   if (success) {
+    const handleAddToCalendar = () => {
+      const [time, period] = selectedTime.split(" ");
+      const [hrs, minutes] = time.split(":");
+      let hour = parseInt(hrs);
+      if (period === "PM" && hour !== 12) hour += 12;
+      if (period === "AM" && hour === 12) hour = 0;
+
+      const appointmentDate = new Date(selectedDate);
+      appointmentDate.setHours(hour, parseInt(minutes), 0, 0);
+
+      downloadICSFile({
+        title: `${selectedService?.name} at ${demo.shopName}`,
+        description: `Appointment${selectedStaff ? ` with ${selectedStaff.name}` : ''}. Service: ${selectedService?.name} (${selectedService?.durationMinutes} min, $${selectedService?.price})`,
+        location: demo.shopName,
+        startTime: appointmentDate,
+        durationMinutes: selectedService?.durationMinutes || 30,
+      }, `${demo.shopName.replace(/\s+/g, '-')}-appointment.ics`);
+    };
+
     return (
       <div className="glass-card rounded-2xl p-10 text-center">
         <div className="text-6xl mb-6">✅</div>
@@ -271,9 +291,16 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
             Repeating {recurring} for {recurringCount} appointments
           </p>
         )}
-        <p className="text-gray-500 text-sm">
+        <p className="text-gray-500 text-sm mb-6">
           Confirmation SMS has been sent to {customerInfo.phone}
         </p>
+        <button
+          onClick={handleAddToCalendar}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+        >
+          <span>📅</span>
+          Add to Calendar
+        </button>
       </div>
     );
   }
@@ -361,8 +388,8 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
                     setSelectedTime("");
                   }}
                   className={`p-4 rounded-xl border text-center transition-all ${selectedStaff === null
-                      ? "border-purple-500 bg-purple-500/20"
-                      : "border-white/10 hover:border-white/30"
+                    ? "border-purple-500 bg-purple-500/20"
+                    : "border-white/10 hover:border-white/30"
                     }`}
                 >
                   <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center text-xl">
@@ -381,8 +408,8 @@ export default function BookingForm({ demo, services, staff }: BookingFormProps)
                         setSelectedTime("");
                       }}
                       className={`p-4 rounded-xl border text-center transition-all ${selectedStaff?.id === s.id
-                          ? "border-purple-500 bg-purple-500/20"
-                          : "border-white/10 hover:border-white/30"
+                        ? "border-purple-500 bg-purple-500/20"
+                        : "border-white/10 hover:border-white/30"
                         }`}
                     >
                       <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
