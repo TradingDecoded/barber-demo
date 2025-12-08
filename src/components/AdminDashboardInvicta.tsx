@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AdminStaff from "./AdminStaff";
-import AdminWebsite from "./AdminWebsite";
 import { useRouter } from "next/navigation";
 
 interface Service {
@@ -491,7 +490,7 @@ export default function AdminDashboardInvicta({ demo }: Props) {
       {/* Navigation Tabs */}
       <div className="border-b border-[#C9A227]/20">
         <div className="max-w-6xl mx-auto px-6 flex gap-1 overflow-x-auto">
-          {["overview", "bookings", "services", "availability", "staff", "website", "settings"].map((tab) => (
+          {["overview", "bookings", "services", "availability", "staff", "settings"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1052,28 +1051,6 @@ export default function AdminDashboardInvicta({ demo }: Props) {
             services={services}
             accentColor="#C9A227"
             onStaffChange={setStaff}
-          />
-        )}
-
-        {/* WEBSITE TAB */}
-        {activeTab === "website" && (
-          <AdminWebsite
-            slug={demo.slug}
-            initialData={{
-              tagline: demo.tagline,
-              heroSubtitle: demo.heroSubtitle,
-              heroImageUrl: demo.heroImageUrl,
-              aboutTitle: demo.aboutTitle,
-              aboutText1: demo.aboutText1,
-              aboutText2: demo.aboutText2,
-              aboutSignature: demo.aboutSignature,
-              aboutImageUrl: demo.aboutImageUrl,
-              address: demo.address,
-              instagramUrl: demo.instagramUrl,
-              facebookUrl: demo.facebookUrl,
-            }}
-            initialGallery={demo.galleryImages || []}
-            accentColor="#C9A227"
           />
         )}
 

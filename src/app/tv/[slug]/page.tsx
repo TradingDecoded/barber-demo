@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import TVDisplay from "@/components/TVDisplay";
+import TVDisplayInvicta from "@/components/TVDisplayInvicta";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -57,6 +58,10 @@ export default async function TVPage({ params }: PageProps) {
       staff: b.staff ? { id: b.staff.id, name: b.staff.name } : null,
     })),
   };
+
+  if (slug === "invicta-barbershop") {
+    return <TVDisplayInvicta demo={serializedDemo} />;
+  }
 
   return <TVDisplay demo={serializedDemo} />;
 }

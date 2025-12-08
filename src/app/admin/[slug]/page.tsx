@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AdminDashboard from "@/components/AdminDashboard";
 import AdminDashboardInvicta from "@/components/AdminDashboardInvicta";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
+import OnboardingWrapperInvicta from "@/components/OnboardingWrapperInvicta";
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +90,9 @@ export default async function AdminPage({ params }: PageProps) {
   };
 
   if (!demo.onboarded) {
+    if (slug === "invicta-barbershop") {
+      return <OnboardingWrapperInvicta demo={serializedDemo} />;
+    }
     return <OnboardingWrapper demo={serializedDemo} />;
   }
 
