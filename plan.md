@@ -129,11 +129,11 @@
 ## 🔄 Partially Complete / Needs Polish
 
 ### Staff Feature Improvements
-- [ ] Filter bookings by staff member in admin Bookings tab
-- [ ] "Any Available" auto-assignment logic (currently saves as null staffId)
+- [x] Filter bookings by staff member in admin Bookings tab ✅ (Dec 7, 2025)
+- [x] "Any Available" auto-assignment logic ✅ (Dec 7, 2025)
 
 ### Reschedule Flow Bug
-- [ ] RescheduleBooking.tsx has malformed JSX (lines 316-321 - `<a>` tag order issue)
+- [x] RescheduleBooking.tsx malformed JSX fixed ✅ (Dec 7, 2025)
 
 ---
 
@@ -262,9 +262,7 @@
 
 ## 🐛 Known Issues
 
-1. **RescheduleBooking.tsx JSX Bug:** Lines 316-321 have malformed anchor tag
-2. **Staff Filter in Bookings:** Not yet implemented in admin
-3. **Any Available Assignment:** Currently stores null staffId, needs assignment logic
+None currently tracked.
 
 ---
 
