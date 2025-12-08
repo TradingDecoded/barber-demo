@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       status: b.status,
       reminderSent: b.reminderSent,
       reviewSent: b.reviewSent,
+      wasAutoAssigned: b.wasAutoAssigned,
       createdAt: b.createdAt.toISOString(),
       service: {
         id: b.service.id,
@@ -96,6 +97,45 @@ export async function POST(request: NextRequest) {
     const recurringGroupId = recurring !== "none" ? uuidv4() : null;
     const baseDate = new Date(appointmentTime);
 
+    // Auto-assign staff if "Any Available" was selected
+    let assignedStaffId = staffId || null;
+    let wasAutoAssigned = false;
+
+    if (!staffId) {
+      // Find all active staff who can perform this service
+      const availableStaff = await prisma.staff.findMany({
+        where: {
+          demoId,
+          isActive: true,
+          services: {
+            some: {
+              serviceId,
+            },
+          },
+        },
+        include: {
+          bookings: {
+            where: {
+              appointmentTime: {
+                gte: new Date(baseDate.getTime() - 24 * 60 * 60 * 1000),
+                lte: new Date(baseDate.getTime() + 24 * 60 * 60 * 1000),
+              },
+              status: {
+                not: "cancelled",
+              },
+            },
+          },
+        },
+      });
+
+      if (availableStaff.length > 0) {
+        // Sort by number of bookings (least busy first)
+        availableStaff.sort((a, b) => a.bookings.length - b.bookings.length);
+        assignedStaffId = availableStaff[0].id;
+        wasAutoAssigned = true;
+      }
+    }
+
     for (let i = 0; i < recurringCount; i++) {
       const apptDate = new Date(baseDate);
 
@@ -113,7 +153,7 @@ export async function POST(request: NextRequest) {
         data: {
           demoId,
           serviceId,
-          staffId: staffId || null,
+          staffId: assignedStaffId,
           customerName,
           customerPhone,
           customerEmail: customerEmail || null,
@@ -121,6 +161,7 @@ export async function POST(request: NextRequest) {
           recurringGroupId,
           recurringType: recurring !== "none" ? recurring : null,
           manageToken,
+          wasAutoAssigned,
         },
       });
 
@@ -140,10 +181,10 @@ export async function POST(request: NextRequest) {
       hour12: true,
     });
 
-    // Get staff name if staffId provided
+    // Get staff name if staff was assigned
     let staffName = null;
-    if (staffId) {
-      const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (assignedStaffId) {
+      const staff = await prisma.staff.findUnique({ where: { id: assignedStaffId } });
       staffName = staff?.name;
     }
 

@@ -20,6 +20,7 @@ interface Booking {
   status: string;
   reminderSent: boolean;
   reviewSent: boolean;
+  wasAutoAssigned: boolean;
   createdAt: string;
   service: Service;
   staff: { id: string; name: string } | null;
@@ -104,6 +105,7 @@ export default function AdminDashboard({ demo }: Props) {
   const [newAppointmentTime, setNewAppointmentTime] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [bookingFilter, setBookingFilter] = useState("upcoming");
+  const [staffFilter, setStaffFilter] = useState("all");
   const [bookingWindowDays, setBookingWindowDays] = useState(demo.bookingWindowDays || 60);
   const [savingWindow, setSavingWindow] = useState(false);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>(demo.blockedDates || []);
@@ -144,6 +146,21 @@ export default function AdminDashboard({ demo }: Props) {
       console.error('Failed to fetch bookings:', error);
     }
   }, [demo.id]);
+
+  const handleReassignStaff = async (bookingId: string, newStaffId: string | null) => {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId: newStaffId, wasAutoAssigned: false }),
+      });
+      if (res.ok) {
+        fetchBookings();
+      }
+    } catch (error) {
+      console.error('Failed to reassign staff:', error);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(fetchBookings, 15000);
@@ -534,21 +551,58 @@ export default function AdminDashboard({ demo }: Props) {
 
         {activeTab === "bookings" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Bookings</h2>
-              <div className="flex gap-2 flex-wrap">
-                {["all", "today", "upcoming", "completed", "noshow", "cancelled"].map((filter) => (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white">Bookings</h2>
+                <div className="flex gap-2 flex-wrap">
+                  {["all", "today", "upcoming", "completed", "noshow", "cancelled"].map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setBookingFilter(filter)}
+                      className={bookingFilter === filter
+                        ? "px-3 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium"
+                        : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
+                      }
+                    >
+                      {filter === "noshow" ? "No Show" : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400 text-sm">Staff:</span>
+                <div className="flex gap-2 flex-wrap">
                   <button
-                    key={filter}
-                    onClick={() => setBookingFilter(filter)}
-                    className={bookingFilter === filter
+                    onClick={() => setStaffFilter("all")}
+                    className={staffFilter === "all"
                       ? "px-3 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium"
                       : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
                     }
                   >
-                    {filter === "noshow" ? "No Show" : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    All Staff
                   </button>
-                ))}
+                  {staff.filter(s => s.isActive).map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setStaffFilter(s.id)}
+                      className={staffFilter === s.id
+                        ? "px-3 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium"
+                        : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
+                      }
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setStaffFilter("unassigned")}
+                    className={staffFilter === "unassigned"
+                      ? "px-3 py-1 rounded-lg bg-purple-500 text-white text-sm font-medium"
+                      : "px-3 py-1 rounded-lg bg-white/10 text-gray-400 text-sm hover:bg-white/20"
+                    }
+                  >
+                    Unassigned
+                  </button>
+                </div>
               </div>
             </div>
             {bookings.length === 0 ? (
@@ -577,6 +631,10 @@ export default function AdminDashboard({ demo }: Props) {
                       const isNoShow = b.status === "noshow";
                       const isCompleted = b.status === "completed";
 
+                      // Staff filter
+                      if (staffFilter === "unassigned" && b.staff !== null) return false;
+                      if (staffFilter !== "all" && staffFilter !== "unassigned" && b.staff?.id !== staffFilter) return false;
+
                       if (bookingFilter === "today") return isToday && !isCancelled && !isNoShow;
                       if (bookingFilter === "upcoming") return !isPast && b.status === "confirmed";
                       if (bookingFilter === "completed") return isCompleted || (isPast && b.status === "confirmed");
@@ -597,7 +655,23 @@ export default function AdminDashboard({ demo }: Props) {
                             <p className="text-gray-500 text-sm">{b.service.durationMinutes} min</p>
                           </td>
                           <td className="px-5 py-4">
-                            <p className="text-white">{b.staff?.name || "Any"}</p>
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={b.staff?.id || ""}
+                                onChange={(e) => handleReassignStaff(b.id, e.target.value || null)}
+                                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                              >
+                                <option value="">Unassigned</option>
+                                {staff.filter(s => s.isActive).map((s) => (
+                                  <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                              </select>
+                              {b.wasAutoAssigned && (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400" title="Auto-assigned">
+                                  Auto
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-5 py-4">
                             <p className="text-white">{fmt(b.appointmentTime).date}</p>

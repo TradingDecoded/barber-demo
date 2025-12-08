@@ -87,6 +87,19 @@ export async function PATCH(
       return NextResponse.json({ success: true });
     }
 
+    // Handle staff reassignment (no action specified, just staffId)
+    if (body.staffId !== undefined) {
+      await prisma.booking.update({
+        where: { id },
+        data: { 
+          staffId: body.staffId || null,
+          wasAutoAssigned: body.wasAutoAssigned ?? false,
+        },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Error updating booking:", error);

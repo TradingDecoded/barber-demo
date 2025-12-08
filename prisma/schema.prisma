@@ -108,6 +108,7 @@ model Booking {
   status          String   @default("confirmed")
   reminderSent    Boolean  @default(false)
   reviewSent      Boolean  @default(false)
+  wasAutoAssigned Boolean  @default(false)
   recurringGroupId String?
   recurringType   String?
   manageToken     String?  @unique
