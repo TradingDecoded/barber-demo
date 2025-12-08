@@ -1,8 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Bebas+Neue&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* Invicta Theme */
+  --gold: #C9A227;
+  --gold-light: #D4AF37;
+  --gold-dark: #8B7355;
+  --black: #0A0A0A;
+  --black-light: #141414;
+  --black-lighter: #1a1a1a;
+  --cream: #F5F0E6;
+  --cream-muted: rgba(245, 240, 230, 0.7);
+  
+  /* Legacy gradient vars */
   --gradient-start: #0f172a;
   --gradient-mid: #1e293b;
   --gradient-end: #0f172a;
@@ -11,6 +24,26 @@
 body {
   background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
   min-height: 100vh;
+}
+
+/* Invicta Theme Body */
+body.invicta-theme {
+  font-family: 'Cormorant Garamond', serif;
+  background-color: var(--black);
+  color: var(--cream);
+}
+
+/* Invicta Font Classes */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-bebas {
+  font-family: 'Bebas Neue', sans-serif;
+}
+
+.font-cormorant {
+  font-family: 'Cormorant Garamond', serif;
 }
 
 .gradient-text {
@@ -31,7 +64,24 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Invicta Glass Card */
+.invicta-card {
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+}
+
+.invicta-card:hover {
+  border-color: rgba(201, 162, 39, 0.4);
+}
+
 select option {
   background: #1e293b;
   color: white;
+}
+
+/* Invicta select styling */
+.invicta-theme select option {
+  background: var(--black-light);
+  color: var(--cream);
 }

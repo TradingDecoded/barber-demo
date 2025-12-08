@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invicta Barber Shop | Father & Son Tradition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C9A227;
+            --gold-light: #D4AF37;
+            --gold-dark: #8B7355;
+            --black: #0A0A0A;
+            --black-light: #141414;
+            --black-lighter: #1a1a1a;
+            --cream: #F5F0E6;
+            --cream-muted: rgba(245, 240, 230, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background-color: var(--black);
+            color: var(--cream);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0) 100%);
+            transition: all 0.4s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(10,10,10,0.98);
+            padding: 1rem 4rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cream-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.8rem 1.8rem;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(201, 162, 39, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(201, 162, 39, 0.05) 0%, transparent 40%),
+                linear-gradient(180deg, var(--black) 0%, var(--black-light) 100%);
+        }
+
+        .hero-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            opacity: 0.1;
+        }
+
+        .hero-lines::before,
+        .hero-lines::after {
+            content: '';
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+        }
+
+        .hero-lines::before {
+            left: 20%;
+            animation: lineFloat 8s ease-in-out infinite;
+        }
+
+        .hero-lines::after {
+            right: 20%;
+            animation: lineFloat 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes lineFloat {
+            0%, 100% { transform: translateY(-10%); }
+            50% { transform: translateY(10%); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1.5rem;
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            margin-bottom: 3rem;
+            animation: fadeInDown 1s ease forwards;
+            opacity: 0;
+        }
+
+        .hero-badge span {
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        .hero-badge .dot {
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            line-height: 0.9;
+            color: var(--cream);
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease 0.2s forwards;
+            opacity: 0;
+        }
+
+        .hero-title .gold {
+            color: var(--gold);
+            display: block;
+            font-size: 0.4em;
+            letter-spacing: 0.4em;
+            margin-top: 0.5rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 300;
+            font-style: italic;
+            color: var(--cream-muted);
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease 0.4s forwards;
+            opacity: 0;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            animation: fadeInUp 1s ease 0.6s forwards;
+            opacity: 0;
+        }
+
+        .btn-primary {
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 1.2rem 3rem;
+            background: var(--gold);
+            border: none;
+            color: var(--black);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(201, 162, 39, 0.3);
+        }
+
+        .btn-secondary {
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 1.2rem 3rem;
+            background: transparent;
+            border: 1px solid var(--cream-muted);
+            color: var(--cream);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeInUp 1s ease 0.8s forwards;
+            opacity: 0;
+        }
+
+        .hero-scroll span {
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gold-dark);
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--gold), transparent);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { transform: scaleY(1); opacity: 1; }
+            50% { transform: scaleY(0.5); opacity: 0.5; }
+        }
+
+        /* About Section */
+        .about {
+            padding: 10rem 4rem;
+            position: relative;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .about-image {
+            position: relative;
+        }
+
+        .about-image-frame {
+            position: relative;
+            aspect-ratio: 4/5;
+            background: var(--black-lighter);
+            overflow: hidden;
+        }
+
+        .about-image-frame::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border: 1px solid var(--gold);
+            opacity: 0.3;
+            transform: translate(20px, 20px);
+            z-index: -1;
+        }
+
+        .about-image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%);
+            transition: all 0.5s ease;
+        }
+
+        .about-image-frame:hover img {
+            filter: grayscale(0%);
+            transform: scale(1.02);
+        }
+
+        .about-content {
+            padding: 2rem 0;
+        }
+
+        .section-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        .about-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            letter-spacing: 0.05em;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+        }
+
+        .about-text {
+            font-size: 1.15rem;
+            font-weight: 300;
+            line-height: 1.9;
+            color: var(--cream-muted);
+            margin-bottom: 2rem;
+        }
+
+        .about-signature {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--gold);
+            margin-top: 2rem;
+        }
+
+        /* Services Section */
+        .services {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+            position: relative;
+        }
+
+        .services::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.3;
+        }
+
+        .services-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .services-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .services-subtitle {
+            font-size: 1.15rem;
+            font-weight: 300;
+            font-style: italic;
+            color: var(--cream-muted);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--black);
+            padding: 3rem 2.5rem;
+            position: relative;
+            transition: all 0.4s ease;
+            border: 1px solid transparent;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover {
+            border-color: rgba(201, 162, 39, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+        }
+
+        .service-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .service-desc {
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--cream-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-price {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--gold);
+        }
+
+        .service-price span {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.9rem;
+            font-weight: 300;
+            color: var(--cream-muted);
+        }
+
+        /* Gallery Section */
+        .gallery {
+            padding: 8rem 4rem;
+        }
+
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .gallery-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            letter-spacing: 0.05em;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .gallery-item:nth-child(1) {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(40%);
+            transition: all 0.5s ease;
+        }
+
+        .gallery-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        .gallery-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+            position: relative;
+        }
+
+        .contact::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.3;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .contact-info h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+        }
+
+        .contact-details {
+            margin-bottom: 3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-item-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--gold);
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .contact-item-text {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: var(--cream-muted);
+        }
+
+        .contact-item-text strong {
+            display: block;
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cream);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .hours-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .hours-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: var(--cream-muted);
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+        }
+
+        .hours-row span:last-child {
+            color: var(--gold);
+        }
+
+        .contact-form {
+            background: var(--black);
+            padding: 3rem;
+        }
+
+        .form-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cream-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 1rem;
+            background: var(--black-light);
+            border: 1px solid rgba(201, 162, 39, 0.2);
+            color: var(--cream);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: var(--black);
+        }
+
+        .form-submit {
+            width: 100%;
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 1.2rem;
+            background: var(--gold);
+            border: none;
+            color: var(--black);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-submit:hover {
+            background: var(--gold-light);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem;
+            text-align: center;
+            border-top: 1px solid rgba(201, 162, 39, 0.1);
+        }
+
+        .footer-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-tagline {
+            font-style: italic;
+            color: var(--cream-muted);
+            margin-bottom: 2rem;
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            color: var(--gold);
+            transition: all 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .footer-copyright {
+            font-size: 0.85rem;
+            color: var(--gold-dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            nav {
+                padding: 1rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .about-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .gallery-item:nth-child(1) {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .about,
+            .services,
+            .gallery,
+            .contact {
+                padding: 4rem 1.5rem;
+            }
+
+            .hero-cta-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-item:nth-child(1) {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+
+            .contact-form {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <a href="#" class="nav-logo">INVICTA</a>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="/demo/invicta-barbershop">Contact</a></li>
+        </ul>
+        <a href="/demo/invicta-barbershop" class="nav-cta" style="text-decoration: none;">Book Now</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-lines"></div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span>Est. 2018</span>
+                <div class="dot"></div>
+                <span>South Florida</span>
+            </div>
+            <h1 class="hero-title">
+                INVICTA
+                <span class="gold">Barber Shop</span>
+            </h1>
+            <p class="hero-subtitle">A Father & Son Tradition of Excellence</p>
+            <div class="hero-cta-group">
+                <a href="/demo/invicta-barbershop" class="btn-primary" style="text-decoration: none;">Book Appointment</a>
+                <a href="#services" class="btn-secondary" style="text-decoration: none;">View Services</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-grid">
+            <div class="about-image">
+                <div class="about-image-frame">
+                    <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&q=80" alt="Barber at work">
+                </div>
+            </div>
+            <div class="about-content">
+                <div class="section-label">Our Story</div>
+                <h2 class="about-title">WHERE CRAFT MEETS<br>TRADITION</h2>
+                <p class="about-text">
+                    Invicta Barber Shop was born from a simple belief: that a haircut is more than a service—it's an experience. As a father and son team, we've built this shop on the foundation of old-school craftsmanship and modern precision.
+                </p>
+                <p class="about-text">
+                    Every client who sits in our chair receives our full attention, our expertise, and our commitment to excellence. We don't rush. We don't compromise. We deliver results that speak for themselves.
+                </p>
+                <p class="about-signature">— The Invicta Family</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="services-header">
+            <div class="section-label" style="justify-content: center;">
+                <span>What We Offer</span>
+            </div>
+            <h2 class="services-title">OUR SERVICES</h2>
+            <p class="services-subtitle">Premium grooming services tailored to the modern gentleman</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M6 3v18M18 3v18M6 12h12M9 6h6M9 18h6"/>
+                </svg>
+                <h3 class="service-name">Classic Haircut</h3>
+                <p class="service-desc">Precision cut with hot towel finish, styled to perfection. Includes consultation and product recommendations.</p>
+                <div class="service-price">$35 <span>/ 45 min</span></div>
+            </div>
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M7 3c-1.5 0-3 1.5-3 3.5 0 3 4 7.5 8 11 4-3.5 8-8 8-11 0-2-1.5-3.5-3-3.5-1.5 0-3 1-4 2.5V8c-1-1.5-2.5-2.5-4-2.5z"/>
+                    <path d="M12 8v13M8 14l4 4 4-4"/>
+                </svg>
+                <h3 class="service-name">Hot Towel Shave</h3>
+                <p class="service-desc">Traditional straight razor shave with premium oils, hot towels, and soothing aftershave treatment.</p>
+                <div class="service-price">$40 <span>/ 45 min</span></div>
+            </div>
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <h3 class="service-name">The Full Experience</h3>
+                <p class="service-desc">Haircut, hot towel shave, beard trim, and scalp massage. The complete gentleman's grooming package.</p>
+                <div class="service-price">$75 <span>/ 90 min</span></div>
+            </div>
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 19V5a2 2 0 012-2h12a2 2 0 012 2v14l-8-4-8 4z"/>
+                </svg>
+                <h3 class="service-name">Beard Sculpting</h3>
+                <p class="service-desc">Expert beard shaping and trimming with hot towel treatment and premium beard oil finish.</p>
+                <div class="service-price">$25 <span>/ 30 min</span></div>
+            </div>
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <h3 class="service-name">Skin Fade</h3>
+                <p class="service-desc">Seamless gradient fade with razor-sharp line work. Precision at its finest.</p>
+                <div class="service-price">$45 <span>/ 60 min</span></div>
+            </div>
+            <div class="service-card">
+                <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
+                </svg>
+                <h3 class="service-name">Kids Cut</h3>
+                <p class="service-desc">Patient, gentle service for our youngest clients. Same precision, extra care.</p>
+                <div class="service-price">$25 <span>/ 30 min</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery" id="gallery">
+        <div class="gallery-header">
+            <div class="section-label" style="justify-content: center;">
+                <span>Our Work</span>
+            </div>
+            <h2 class="gallery-title">THE GALLERY</h2>
+        </div>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&q=80" alt="Haircut style">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80" alt="Barber cutting hair">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&q=80" alt="Fade haircut">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&q=80" alt="Beard trim">
+            </div>
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&q=80" alt="Classic cut">
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-grid">
+            <div class="contact-info">
+                <div class="section-label">Get In Touch</div>
+                <h2>VISIT US</h2>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <svg class="contact-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <div class="contact-item-text">
+                            <strong>Location</strong>
+                            123 Main Street<br>Hollywood, FL 33020
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <svg class="contact-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                        </svg>
+                        <div class="contact-item-text">
+                            <strong>Phone</strong>
+                            (954) 555-0123
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <svg class="contact-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <div class="contact-item-text">
+                        <strong>Hours</strong>
+                        <div class="hours-grid">
+                            <div class="hours-row">
+                                <span>Monday - Friday</span>
+                                <span>9:00 AM - 7:00 PM</span>
+                            </div>
+                            <div class="hours-row">
+                                <span>Saturday</span>
+                                <span>8:00 AM - 5:00 PM</span>
+                            </div>
+                            <div class="hours-row">
+                                <span>Sunday</span>
+                                <span>Closed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-form">
+                <h3 class="form-title">Book Your Appointment</h3>
+                <p style="color: var(--cream-muted); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">
+                    Ready for a premium grooming experience? Book your appointment online in seconds. Choose your service, pick your time, and we'll take care of the rest.
+                </p>
+                <a href="/demo/invicta-barbershop" class="form-submit" style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">Book Online Now</a>
+                <p style="color: var(--gold-dark); font-size: 0.9rem; margin-top: 1.5rem; text-align: center;">
+                    Instant confirmation • SMS reminders • Easy rescheduling
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">INVICTA</div>
+        <p class="footer-tagline">A Father & Son Tradition of Excellence</p>
+        <div class="footer-social">
+            <a href="#" aria-label="Instagram">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+            </a>
+            <a href="#" aria-label="Facebook">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+                </svg>
+            </a>
+            <a href="#" aria-label="Phone">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                </svg>
+            </a>
+        </div>
+        <p class="footer-copyright">© 2024 Invicta Barber Shop. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
