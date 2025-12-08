@@ -18,6 +18,9 @@ export default async function AdminPage({ params }: PageProps) {
       services: true,
       hours: true,
       blockedDates: true,
+      galleryImages: {
+        orderBy: { sortOrder: 'asc' },
+      },
       staff: {
         orderBy: { sortOrder: 'asc' },
         include: {
@@ -75,6 +78,12 @@ export default async function AdminPage({ params }: PageProps) {
       createdAt: s.createdAt.toISOString(),
       hours: s.hours,
       services: s.services,
+    })),
+    galleryImages: demo.galleryImages.map((g) => ({
+      id: g.id,
+      imageUrl: g.imageUrl,
+      altText: g.altText,
+      sortOrder: g.sortOrder,
     })),
   };
 

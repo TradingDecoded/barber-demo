@@ -21,11 +21,26 @@ model Demo {
   timezone    String    @default("America/New_York")
   onboarded   Boolean   @default(false)
   createdAt   DateTime  @default(now())
-  services    Service[]
-  bookings    Booking[]
+  
+  // Website content
+  tagline         String?
+  heroSubtitle    String?
+  heroImageUrl    String?
+  aboutTitle      String?
+  aboutText1      String?   @db.Text
+  aboutText2      String?   @db.Text
+  aboutSignature  String?
+  aboutImageUrl   String?
+  address         String?
+  instagramUrl    String?
+  facebookUrl     String?
+  
+  services      Service[]
+  bookings      Booking[]
   hours         BusinessHours[]
   blockedDates  BlockedDate[]
   staff         Staff[]
+  galleryImages GalleryImage[]
 }
 
 model Staff {
@@ -124,4 +139,14 @@ model BlockedDate {
   createdAt DateTime @default(now())
 
   @@unique([demoId, date])
+}
+
+model GalleryImage {
+  id        String   @id @default(uuid())
+  demoId    String
+  demo      Demo     @relation(fields: [demoId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }

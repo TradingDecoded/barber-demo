@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AdminStaff from "./AdminStaff";
+import AdminWebsite from "./AdminWebsite";
 import { useRouter } from "next/navigation";
 
 interface Service {
@@ -66,6 +67,13 @@ interface Staff {
   services: StaffServiceItem[];
 }
 
+interface GalleryImage {
+  id: string;
+  imageUrl: string;
+  altText: string | null;
+  sortOrder: number;
+}
+
 interface Demo {
   id: string;
   slug: string;
@@ -82,6 +90,18 @@ interface Demo {
   hours: BusinessHours[];
   blockedDates: BlockedDate[];
   staff: Staff[];
+  tagline: string | null;
+  heroSubtitle: string | null;
+  heroImageUrl: string | null;
+  aboutTitle: string | null;
+  aboutText1: string | null;
+  aboutText2: string | null;
+  aboutSignature: string | null;
+  aboutImageUrl: string | null;
+  address: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  galleryImages: GalleryImage[];
 }
 
 interface Props {
@@ -452,12 +472,13 @@ export default function AdminDashboard({ demo }: Props) {
 
       <div className="border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 flex gap-8">
-          <button onClick={() => setActiveTab("overview")} className={activeTab === "overview" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Overview</button>
-          <button onClick={() => setActiveTab("bookings")} className={activeTab === "bookings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Bookings</button>
-          <button onClick={() => setActiveTab("services")} className={activeTab === "services" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Services</button>
-          <button onClick={() => setActiveTab("closures")} className={activeTab === "closures" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Closures</button>
-          <button onClick={() => setActiveTab("staff")} className={activeTab === "staff" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Staff</button>
-          <button onClick={() => setActiveTab("settings")} className={activeTab === "settings" ? "py-4 text-sm font-medium border-b-2 border-purple-500 text-white" : "py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white"}>Settings</button>
+          <button onClick={() => setActiveTab("overview")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "overview" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Overview</button>
+          <button onClick={() => setActiveTab("bookings")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "bookings" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Bookings</button>
+          <button onClick={() => setActiveTab("services")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "services" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Services</button>
+          <button onClick={() => setActiveTab("availability")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "availability" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Availability</button>
+          <button onClick={() => setActiveTab("staff")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "staff" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Staff</button>
+          <button onClick={() => setActiveTab("website")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "website" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Website</button>
+          <button onClick={() => setActiveTab("settings")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "settings" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white"}`}>Settings</button>
         </div>
       </div>
 
@@ -987,6 +1008,27 @@ export default function AdminDashboard({ demo }: Props) {
             services={services}
             accentColor={demo.accentColor || "#8b5cf6"}
             onStaffChange={setStaff}
+          />
+        )}
+
+        {activeTab === "website" && (
+          <AdminWebsite
+            slug={demo.slug}
+            initialData={{
+              tagline: demo.tagline,
+              heroSubtitle: demo.heroSubtitle,
+              heroImageUrl: demo.heroImageUrl,
+              aboutTitle: demo.aboutTitle,
+              aboutText1: demo.aboutText1,
+              aboutText2: demo.aboutText2,
+              aboutSignature: demo.aboutSignature,
+              aboutImageUrl: demo.aboutImageUrl,
+              address: demo.address,
+              instagramUrl: demo.instagramUrl,
+              facebookUrl: demo.facebookUrl,
+            }}
+            initialGallery={demo.galleryImages || []}
+            accentColor={demo.accentColor || "#8b5cf6"}
           />
         )}
 
