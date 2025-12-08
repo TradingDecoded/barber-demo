@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import AdminDashboard from "@/components/AdminDashboard";
+import AdminDashboardInvicta from "@/components/AdminDashboardInvicta";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
 
 export const dynamic = 'force-dynamic';
@@ -89,6 +90,11 @@ export default async function AdminPage({ params }: PageProps) {
 
   if (!demo.onboarded) {
     return <OnboardingWrapper demo={serializedDemo} />;
+  }
+
+  // Use Invicta theme for invicta-barbershop
+  if (slug === "invicta-barbershop") {
+    return <AdminDashboardInvicta demo={serializedDemo} />;
   }
 
   return <AdminDashboard demo={serializedDemo} />;
