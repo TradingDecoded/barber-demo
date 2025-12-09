@@ -463,37 +463,7 @@ export default function OnboardingWizardInvicta({ demo, initialServices, initial
                             </svg>
                         </div>
                         <h2 className="font-cinzel text-3xl text-[#F5F0E6] mb-3 tracking-wider">You&apos;re All Set!</h2>
-                        <p className="font-cormorant text-[#8B7355] text-lg mb-8">Your booking page is ready to share with customers.</p>
-
-                        <div className="bg-[#141414] border border-[#C9A227]/30 p-6 mb-8">
-                            <p className="font-cormorant text-[#8B7355] text-sm mb-3">Your booking link:</p>
-                            <a
-                                href={bookingUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-cormorant text-[#C9A227] hover:text-[#D4AF37] break-all transition-colors"
-                            >
-                                {bookingUrl}
-                            </a>
-                        </div>
-
-                        <div className="text-left space-y-3 mb-8">
-                            <p className="font-cinzel text-[#F5F0E6] tracking-wider">What&apos;s next?</p>
-                            <div className="space-y-2 font-cormorant text-[#8B7355]">
-                                <p className="flex items-center gap-3">
-                                    <span className="text-[#C9A227]">•</span>
-                                    Share your booking link on social media
-                                </p>
-                                <p className="flex items-center gap-3">
-                                    <span className="text-[#C9A227]">•</span>
-                                    Add it to your Google Business profile
-                                </p>
-                                <p className="flex items-center gap-3">
-                                    <span className="text-[#C9A227]">•</span>
-                                    Text it to your regular customers
-                                </p>
-                            </div>
-                        </div>
+                        <p className="font-cormorant text-[#8B7355] text-lg mb-8">Your shop is ready. Click below to go to your dashboard.</p>
                     </div>
                 )}
 

@@ -85,3 +85,15 @@ select option {
   background: var(--black-light);
   color: var(--cream);
 }
+
+/* Invicta time and date input icon styling */
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(72%) sepia(53%) saturate(460%) hue-rotate(6deg) brightness(92%) contrast(89%);
+  cursor: pointer;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(78%) sepia(60%) saturate(520%) hue-rotate(6deg) brightness(95%) contrast(92%);
+}

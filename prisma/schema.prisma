@@ -20,6 +20,7 @@ model Demo {
   bookingWindowDays Int @default(60)
   timezone    String    @default("America/New_York")
   onboarded   Boolean   @default(false)
+  tourCompleted Boolean @default(false)
   createdAt   DateTime  @default(now())
   
   // Website content

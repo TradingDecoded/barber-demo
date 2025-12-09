@@ -262,7 +262,7 @@ export default function BookingFormInvicta({ demo, services, staff }: BookingFor
 
     return (
       <div className="invicta-card rounded-xl p-10 text-center">
-        <div className="text-6xl mb-6">✓</div>
+        <div className="text-6xl mb-6 text-[#C9A227]">✓</div>
         <h2 className="font-bebas text-3xl tracking-wide text-[#F5F0E6] mb-4">
           {recurring !== "none" ? `${recurringCount} Appointments Booked!` : "Booking Confirmed!"}
         </h2>

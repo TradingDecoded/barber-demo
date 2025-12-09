@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AdminStaff from "./AdminStaff";
+import GuidedTourInvicta from "./GuidedTourInvicta";
 import { useRouter } from "next/navigation";
 
 interface Service {
@@ -101,6 +102,7 @@ interface Demo {
   instagramUrl: string | null;
   facebookUrl: string | null;
   galleryImages: GalleryImage[];
+  tourCompleted: boolean;
 }
 
 interface Props {
@@ -110,6 +112,7 @@ interface Props {
 export default function AdminDashboardInvicta({ demo }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showTour, setShowTour] = useState(!demo.tourCompleted);
   const [copied, setCopied] = useState(false);
   const [services, setServices] = useState(demo.services);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -132,6 +135,8 @@ export default function AdminDashboardInvicta({ demo }: Props) {
   const [newBlockedEndDate, setNewBlockedEndDate] = useState("");
   const [newBlockedReason, setNewBlockedReason] = useState("");
   const [savingBlocked, setSavingBlocked] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const defaultHours = [
     { day: 0, isOpen: false, openTime: "09:00", closeTime: "18:00" },
     { day: 1, isOpen: true, openTime: "09:00", closeTime: "18:00" },
@@ -384,6 +389,25 @@ export default function AdminDashboardInvicta({ demo }: Props) {
     }
   };
 
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch(`/api/demos/${demo.slug}/reset`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert("Failed to reset demo");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to reset demo");
+    }
+    setResetting(false);
+    setShowResetConfirm(false);
+  };
+
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm("Cancel this appointment? The customer will be notified.")) return;
     setActionLoading(bookingId);
@@ -433,6 +457,15 @@ export default function AdminDashboardInvicta({ demo }: Props) {
   const cream = "#F5F0E6";
 
   return (
+  <>
+    {showTour && (
+      <GuidedTourInvicta
+        slug={demo.slug}
+        demoId={demo.id}
+        onComplete={() => setShowTour(false)}
+        setActiveTab={setActiveTab}
+      />
+    )}
     <div className="min-h-screen bg-[#0A0A0A]">
       {/* Header */}
       <header className="border-b border-[#C9A227]/20">
@@ -454,38 +487,12 @@ export default function AdminDashboardInvicta({ demo }: Props) {
             <a href={"/tv/" + demo.slug} target="_blank" className="font-cinzel text-xs tracking-wider text-[#8B7355] hover:text-[#C9A227] transition-colors">
               TV Display
             </a>
-            <a href={"/demo/" + demo.slug} target="_blank" className="font-cinzel text-xs tracking-wider px-4 py-2 bg-[#C9A227] text-[#0A0A0A] hover:bg-[#D4AF37] transition-colors flex items-center gap-2">
-              👁️ Preview Booking
+            <a href={"/site/" + demo.slug + ".html"} target="_blank" data-tour="view-website" className="font-cinzel text-xs tracking-wider px-4 py-2 bg-[#C9A227] text-[#0A0A0A] hover:bg-[#D4AF37] transition-colors flex items-center gap-2">
+              🌐 View Website
             </a>
           </div>
         </div>
       </header>
-
-      {/* Share Link Banner */}
-      <div className="bg-[#C9A227]/10 border-b border-[#C9A227]/20">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <p className="font-cinzel text-[#F5F0E6] font-medium">Share your booking link</p>
-              <p className="font-cormorant text-[#8B7355] text-sm">Send this to customers so they can book</p>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <input 
-                type="text" 
-                readOnly 
-                value={bookingUrl} 
-                className="flex-1 sm:w-80 px-4 py-2 bg-[#141414] border border-[#C9A227]/30 text-[#C9A227] font-cormorant text-sm focus:outline-none focus:border-[#C9A227]" 
-              />
-              <button 
-                onClick={copyLink} 
-                className="font-cinzel text-xs tracking-wider px-4 py-2 bg-[#C9A227] text-[#0A0A0A] hover:bg-[#D4AF37] transition-colors"
-              >
-                {copied ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation Tabs */}
       <div className="border-b border-[#C9A227]/20">
@@ -493,6 +500,7 @@ export default function AdminDashboardInvicta({ demo }: Props) {
           {["overview", "bookings", "services", "availability", "staff", "settings"].map((tab) => (
             <button
               key={tab}
+              data-tour={`${tab}-tab`}
               onClick={() => setActiveTab(tab)}
               className={`font-cinzel text-xs tracking-wider px-4 py-3 transition-colors whitespace-nowrap ${
                 activeTab === tab
@@ -1170,23 +1178,54 @@ export default function AdminDashboardInvicta({ demo }: Props) {
               </div>
             </div>
 
-            {/* Demo Code */}
-            <div className="invicta-card rounded-xl p-6 space-y-4">
-              <h3 className="font-cinzel text-[#F5F0E6]">Demo Code</h3>
-              <p className="font-cormorant text-[#8B7355] text-sm">Share this code with customers</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 px-4 py-3 bg-[#141414] border border-[#C9A227]/30 text-[#C9A227] font-mono">{demo.slug}</code>
-                <button 
-                  onClick={copyLink} 
-                  className="font-cinzel text-xs tracking-wider px-4 py-3 bg-[#C9A227] text-[#0A0A0A] hover:bg-[#D4AF37]"
-                >
-                  {copied ? "Copied!" : "Copy Link"}
-                </button>
-              </div>
+            {/* Danger Zone */}
+            <div className="invicta-card rounded-xl p-6 space-y-4 border border-red-900/50">
+              <h3 className="font-cinzel text-red-400">Danger Zone</h3>
+              <p className="font-cormorant text-[#8B7355] text-sm">
+                Reset this demo to start fresh. This action cannot be undone.
+              </p>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="font-cinzel text-xs tracking-wider px-4 py-2 bg-red-900/50 text-red-400 border border-red-900 hover:bg-red-900 hover:text-red-300 transition-colors"
+              >
+                Reset Demo
+              </button>
             </div>
           </div>
         )}
       </div>
     </div>
+
+    {/* Reset Confirmation Modal */}
+    {showResetConfirm && (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="invicta-card rounded-xl p-6 max-w-md w-full space-y-4">
+          <h3 className="font-cinzel text-xl text-red-400">Confirm Reset</h3>
+          <p className="font-cormorant text-[#F5F0E6]">
+            This will delete all bookings, staff, services, and settings. Are you sure you want to reset everything?
+          </p>
+          <p className="font-cormorant text-[#8B7355] text-sm">
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setShowResetConfirm(false)}
+              disabled={resetting}
+              className="flex-1 font-cinzel text-xs tracking-wider px-4 py-2 border border-[#C9A227]/30 text-[#8B7355] hover:border-[#C9A227] hover:text-[#F5F0E6] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleReset}
+              disabled={resetting}
+              className="flex-1 font-cinzel text-xs tracking-wider px-4 py-2 bg-red-900 text-red-300 hover:bg-red-800 disabled:opacity-50 transition-colors"
+            >
+              {resetting ? "Resetting..." : "Yes, Reset Everything"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 }
